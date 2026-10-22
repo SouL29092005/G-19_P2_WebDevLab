@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-$envPath = dirname(__DIR__) . '/.env';
+$envPath = __DIR__ . '/.env';
 
 if (!is_file($envPath)) {
     throw new RuntimeException('.env file not found.');

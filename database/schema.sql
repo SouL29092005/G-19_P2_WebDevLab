@@ -107,13 +107,6 @@ create index idx_bookings_hold_expiration
 
 
 -- 6. PREVENT CONFLICTING RESERVATIONS
---
--- PostgreSQL cannot use a moving current-time condition in a
--- partial unique index. Therefore, the booking logic must first
--- lock the relevant computer/slot and expire stale holds.
---
--- This index provides a final database-level safeguard against
--- two active reservations for the same computer and slot.
 
 create unique index uq_active_computer_slot_booking
     on bookings (booking_date, computer_id, slot_id)

@@ -5,6 +5,7 @@
 
 # Database seed data (local data)
 /database/seed.sql
+/config/.env
 
 # PHP dependencies
 /vendor/
