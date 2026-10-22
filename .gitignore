@@ -1,0 +1,21 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Database seed data (local data)
+/database/seed.sql
+
+# PHP dependencies
+/vendor/
+
+# Logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
