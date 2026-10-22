@@ -49,37 +49,30 @@ if ($route === null) {
     $pageTitle = 'Page Not Found';
     $viewFile = null;
 } else {
-    http_response_code(200);
     $pageTitle = APP_NAME;
 
     $viewFile = match ($route) {
         'home' => APP_PATH . '/views/home.php',
         default => null,
     };
+
+    if ($viewFile === null || !is_file($viewFile)) {
+        http_response_code(500);
+        $pageTitle = 'Internal Server Error';
+        $viewFile = null;
+    } else {
+        http_response_code(200);
+    }
 }
 
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta
-        name="description"
-        content="Laboratory Computer Reservation System"
-    >
-    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-</head>
-<body>
-    <header>
-        <h1><?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></h1>
-    </header>
+require APP_PATH . '/views/layouts/header.php';
 
-    
-    <main>
-        <?php if ($viewFile !== null && is_file($viewFile)): ?>
-            <?php require $viewFile; ?>
-        <?php else: ?>
+if ($viewFile !== null) {
+    require $viewFile;
+} else {
+    if (http_response_code() === 404) {
+        ?>
+        <section class="error-page">
             <h2>404 - Page Not Found</h2>
             <p>The requested page does not exist yet.</p>
             <a href="<?= htmlspecialchars(
@@ -87,8 +80,16 @@ if ($route === null) {
                 ENT_QUOTES,
                 'UTF-8'
             ) ?>">Return to Home</a>
-        <?php endif; ?>
-    </main>
+        </section>
+        <?php
+    } else {
+        ?>
+        <section class="error-page">
+            <h2>500 - Internal Server Error</h2>
+            <p>The requested page could not be loaded.</p>
+        </section>
+        <?php
+    }
+}
 
-</body>
-</html>
+require APP_PATH . '/views/layouts/footer.php';

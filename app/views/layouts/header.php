@@ -14,6 +14,11 @@ $pageTitle = $pageTitle ?? APP_NAME;
         name="description"
         content="Laboratory Computer Reservation System"
     >
+    <link rel="stylesheet" href="<?= htmlspecialchars(
+        rtrim(APP_BASE_URL, '/') . '/assets/css/style.css',
+        ENT_QUOTES,
+        'UTF-8'
+    ) ?>">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
 </head>
 <body>
