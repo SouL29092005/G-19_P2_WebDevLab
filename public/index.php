@@ -39,57 +39,86 @@ if ($requestPath === '') {
 $routes = [
     'GET' => [
         '/' => 'home',
+        '/availability' => 'availability',
     ],
 ];
 
 $route = $routes[$requestMethod][$requestPath] ?? null;
 
+$viewFile = null;
+$viewData = [];
+$pageTitle = APP_NAME;
+
 if ($route === null) {
     http_response_code(404);
     $pageTitle = 'Page Not Found';
-    $viewFile = null;
 } else {
-    $pageTitle = APP_NAME;
+    try {
+        switch ($route) {
+            case 'home':
+                $viewFile = APP_PATH . '/views/home.php';
+                break;
 
-    $viewFile = match ($route) {
-        'home' => APP_PATH . '/views/home.php',
-        default => null,
-    };
+            case 'availability':
+                require_once CONFIG_PATH . '/database.php';
 
-    if ($viewFile === null || !is_file($viewFile)) {
+                require_once APP_PATH
+                    . '/repositories/ComputerRepository.php';
+
+                require_once APP_PATH
+                    . '/controllers/ComputerController.php';
+
+                $repository = new ComputerRepository($pdo);
+                $controller = new ComputerController($repository);
+
+                $viewData = $controller->index();
+                $pageTitle = $viewData['pageTitle'];
+                $viewFile = APP_PATH . '/views/availability.php';
+                break;
+        }
+
+        if ($viewFile === null || !is_file($viewFile)) {
+            http_response_code(500);
+            $pageTitle = 'Internal Server Error';
+            $viewFile = null;
+        } else {
+            http_response_code(200);
+        }
+    } catch (Throwable $exception) {
+        error_log(
+            'Application request failed: ' . $exception->getMessage()
+        );
+
         http_response_code(500);
         $pageTitle = 'Internal Server Error';
         $viewFile = null;
-    } else {
-        http_response_code(200);
     }
 }
 
 require APP_PATH . '/views/layouts/header.php';
 
 if ($viewFile !== null) {
+    extract($viewData, EXTR_SKIP);
     require $viewFile;
+} elseif (http_response_code() === 404) {
+    ?>
+    <section class="error-page">
+        <h2>404 - Page Not Found</h2>
+        <p>The requested page does not exist yet.</p>
+        <a href="<?= htmlspecialchars(
+            rtrim(APP_BASE_URL, '/') . '/',
+            ENT_QUOTES,
+            'UTF-8'
+        ) ?>">Return to Home</a>
+    </section>
+    <?php
 } else {
-    if (http_response_code() === 404) {
-        ?>
-        <section class="error-page">
-            <h2>404 - Page Not Found</h2>
-            <p>The requested page does not exist yet.</p>
-            <a href="<?= htmlspecialchars(
-                rtrim(APP_BASE_URL, '/') . '/',
-                ENT_QUOTES,
-                'UTF-8'
-            ) ?>">Return to Home</a>
-        </section>
-        <?php
-    } else {
-        ?>
-        <section class="error-page">
-            <h2>500 - Internal Server Error</h2>
-            <p>The requested page could not be loaded.</p>
-        </section>
-        <?php
-    }
+    ?>
+    <section class="error-page">
+        <h2>500 - Internal Server Error</h2>
+        <p>The requested page could not be loaded.</p>
+    </section>
+    <?php
 }
 
 require APP_PATH . '/views/layouts/footer.php';
