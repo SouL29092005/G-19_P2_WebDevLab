@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 define('APP_NAME', 'Laboratory Computer Reservation System');
 
-define('APP_BASE_URL', 'http://localhost:8080/G-19_P2_WebDevLab/public');
+define('APP_BASE_URL', 'http://lab-reservation.local:8080');
 
 define('APP_TIMEZONE', 'Asia/Kolkata');
 

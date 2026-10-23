@@ -32,6 +32,10 @@ if (is_string($basePath) && $basePath !== '' && $basePath !== '/') {
 
 $requestPath = '/' . trim($requestPath, '/');
 
+error_log('Request path: ' . $requestPath);
+error_log('Request URI: ' . $requestUri);
+error_log('App base URL: ' . APP_BASE_URL);
+
 if ($requestPath === '') {
     $requestPath = '/';
 }
@@ -42,6 +46,10 @@ $routes = [
         '/availability' => 'availability',
     ],
 ];
+
+error_log('DEBUG method: ' . $requestMethod);
+error_log('DEBUG path: ' . $requestPath);
+error_log('DEBUG URI: ' . $requestUri);
 
 $route = $routes[$requestMethod][$requestPath] ?? null;
 
