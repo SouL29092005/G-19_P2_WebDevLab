@@ -10,7 +10,26 @@ final class ComputerRepository
     }
 
 
-    public function getAvailabilityForDate(string $date): array
+    public function getTimeSlots(): array
+    {
+        $sql = '
+            select
+                slot_id,
+                start_time,
+                end_time
+            from time_slots
+            order by start_time
+        ';
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+
+    public function getAvailabilityForDate(
+        string $date,
+        array $slotIds,
+        string $status
+    ): array
     {
         $sql = '
             select
@@ -21,9 +40,9 @@ final class ComputerRepository
                 ts.start_time,
                 ts.end_time,
                 case
-                    when b.booking_id is null then true
-                    else false
-                end as is_available
+                    when b.booking_id is null then \'available\'
+                    else b.status
+                end as status
             from computers c
             cross join time_slots ts
             left join bookings b
@@ -38,16 +57,41 @@ final class ComputerRepository
                     )
                 )
             where c.is_active = true
+        ';
+
+        $parameters = [
+            'booking_date' => $date,
+        ];
+
+        if ($slotIds !== []) {
+            $slotPlaceholders = [];
+
+            foreach ($slotIds as $index => $slotId) {
+                $placeholder = 'slot_id_' . $index;
+                $slotPlaceholders[] = ':' . $placeholder;
+                $parameters[$placeholder] = $slotId;
+            }
+
+            $sql .= ' and ts.slot_id in ('
+                . implode(', ', $slotPlaceholders)
+                . ')';
+        }
+
+        if ($status === 'available') {
+            $sql .= ' and b.booking_id is null';
+        } elseif (in_array($status, ['waiting', 'booked'], true)) {
+            $sql .= ' and b.status = :status';
+            $parameters['status'] = $status;
+        }
+
+        $sql .= '
             order by
                 c.computer_name,
                 ts.start_time
         ';
 
         $statement = $this->pdo->prepare($sql);
-
-        $statement->execute([
-            'booking_date' => $date,
-        ]);
+        $statement->execute($parameters);
 
         return $statement->fetchAll();
     }

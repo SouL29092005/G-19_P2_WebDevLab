@@ -8,8 +8,8 @@ declare(strict_types=1);
     <div class="availability-heading">
         <h2>Computer Availability</h2>
         <p>
-            Select a date to check which laboratory computers
-            are available.
+            Filter laboratory computers by reservation date, time slot, and
+            availability status.
         </p>
     </div>
 
@@ -21,26 +21,85 @@ declare(strict_types=1);
 
     <form method="GET" action="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/availability', ENT_QUOTES, 'UTF-8'
     ) ?>" class="date-filter">
-        <label for="booking-date">Reservation date</label>
+        <div class="filter-field">
+            <label for="booking-date">Reservation date</label>
 
-        <input
-            type="date"
-            id="booking-date"
-            name="date"
-            value="<?= htmlspecialchars($selectedDate, ENT_QUOTES, 'UTF-8') ?>"
-            min="<?= htmlspecialchars($minDate, ENT_QUOTES, 'UTF-8') ?>"
-            max="<?= htmlspecialchars($maxDate, ENT_QUOTES, 'UTF-8') ?>"
-            required
-        >
+            <input
+                type="date"
+                id="booking-date"
+                name="date"
+                value="<?= htmlspecialchars($selectedDate, ENT_QUOTES, 'UTF-8') ?>"
+                min="<?= htmlspecialchars($minDate, ENT_QUOTES, 'UTF-8') ?>"
+                max="<?= htmlspecialchars($maxDate, ENT_QUOTES, 'UTF-8') ?>"
+                required
+            >
+        </div>
 
-        <button type="submit" class="button button-primary">
-            Check Availability
-        </button>
+        <div class="filter-field">
+            <label for="availability-status">Status</label>
+
+            <select id="availability-status" name="status">
+                <?php foreach ($statusOptions as $statusOption): ?>
+                    <option
+                        value="<?= htmlspecialchars($statusOption, ENT_QUOTES, 'UTF-8') ?>"
+                        <?= $selectedStatus === $statusOption ? 'selected' : '' ?>
+                    >
+                        <?= htmlspecialchars(
+                            ucfirst($statusOption),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <details class="filter-slots">
+            <summary>Time slots <span>(select multiple)</span></summary>
+            <div class="time-slot-menu">
+                <p class="filter-hint">
+                    Select one or more slots. Leave all unchecked to include
+                    every time slot.
+                </p>
+                <div class="time-slot-options">
+                    <?php foreach ($timeSlots as $timeSlot): ?>
+                        <?php
+                        $slotId = (int) $timeSlot['slot_id'];
+                        $startTime = substr($timeSlot['start_time'], 0, 5);
+                        $endTime = substr($timeSlot['end_time'], 0, 5);
+                        ?>
+                        <label class="time-slot-option">
+                            <input
+                                type="checkbox"
+                                name="slot_ids[]"
+                                value="<?= $slotId ?>"
+                                <?= in_array(
+                                    $slotId,
+                                    $selectedSlotIds,
+                                    true
+                                ) ? 'checked' : '' ?>
+                            >
+                            <span><?= htmlspecialchars(
+                                $startTime . ' – ' . $endTime,
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </details>
+
+        <div class="filter-actions">
+            <button type="submit" class="button button-primary">
+                Apply Filters
+            </button>
+        </div>
     </form>
 
     <?php if ($availability === []): ?>
         <p class="empty-state">
-            No active computers or time slots were found.
+            No computers match the selected filters.
         </p>
     <?php else: ?>
         <?php
@@ -83,14 +142,9 @@ declare(strict_types=1);
                     <?php
                 }
 
-                $isAvailable = in_array(
-                    $slot['is_available'],
-                    [true, 1, '1', 't', 'true'],
-                    true
-                );
-
                 $startTime = substr($slot['start_time'], 0, 5);
                 $endTime = substr($slot['end_time'], 0, 5);
+                $status = $slot['status'];
                 ?>
 
                 <div class="slot-item">
@@ -100,10 +154,16 @@ declare(strict_types=1);
                         <?= htmlspecialchars($endTime, ENT_QUOTES, 'UTF-8') ?>
                     </span>
 
-                    <span class="slot-status <?= $isAvailable
-                        ? 'status-available'
-                        : 'status-unavailable' ?>">
-                        <?= $isAvailable ? 'Available' : 'Unavailable' ?>
+                    <span class="slot-status status-<?= htmlspecialchars(
+                        $status,
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) ?>">
+                        <?= htmlspecialchars(
+                            ucfirst($status),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
                     </span>
                 </div>
             <?php endforeach; ?>

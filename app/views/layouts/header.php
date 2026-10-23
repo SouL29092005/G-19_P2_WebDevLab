@@ -15,7 +15,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
         content="Laboratory Computer Reservation System"
     >
     <link rel="stylesheet" href="<?= htmlspecialchars(
-        rtrim(APP_BASE_URL, '/') . '/assets/css/style.css',
+        rtrim(APP_BASE_URL, '/')
+            . '/assets/css/style.css?v='
+            . filemtime(PUBLIC_PATH . '/assets/css/style.css'),
         ENT_QUOTES,
         'UTF-8'
     ) ?>">
