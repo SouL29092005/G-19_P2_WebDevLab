@@ -1,4 +1,9 @@
+
 RewriteEngine On
+
+# Send the admin URL through the front controller,
+# even though public/admin/ is a physical directory.
+RewriteRule ^admin/?$ index.php [L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

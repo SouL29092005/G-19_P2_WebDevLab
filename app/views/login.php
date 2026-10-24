@@ -38,13 +38,24 @@
 
                 <div class="login-field">
                     <label for="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        autocomplete="current-password"
-                        required
-                    >
+                    <div class="password-input">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <button
+                            class="password-toggle"
+                            id="password-toggle"
+                            type="button"
+                            aria-controls="password"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                            disabled
+                        >Show</button>
+                    </div>
                 </div>
 
                 <button class="login-submit" type="submit">Sign in</button>
@@ -57,3 +68,31 @@
         </div>
     </div>
 </section>
+
+<script>
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('password-toggle');
+
+    passwordInput.addEventListener('input', () => {
+        passwordToggle.disabled = passwordInput.value.length === 0;
+
+        if (passwordToggle.disabled && passwordInput.type === 'text') {
+            passwordInput.type = 'password';
+            passwordToggle.textContent = 'Show';
+            passwordToggle.setAttribute('aria-label', 'Show password');
+            passwordToggle.setAttribute('aria-pressed', 'false');
+        }
+    });
+
+    passwordToggle.addEventListener('click', () => {
+        const shouldShow = passwordInput.type === 'password';
+        passwordInput.type = shouldShow ? 'text' : 'password';
+        passwordToggle.textContent = shouldShow ? 'Hide' : 'Show';
+        passwordToggle.setAttribute(
+            'aria-label',
+            shouldShow ? 'Hide password' : 'Show password'
+        );
+        passwordToggle.setAttribute('aria-pressed', String(shouldShow));
+        passwordInput.focus();
+    });
+</script>

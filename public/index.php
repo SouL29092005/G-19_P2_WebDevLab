@@ -45,6 +45,7 @@ $routes = [
         '/' => 'home',
         '/login' => 'login',
         '/availability' => 'availability',
+        '/admin' => 'admin',
     ],
     'POST' => [
         '/login' => 'login',
@@ -107,6 +108,17 @@ if ($route === null) {
                 $viewData = $controller->index();
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/availability.php';
+                break;
+            case 'admin':
+                require_once APP_PATH
+                    . '/middleware/AdminMiddleware.php';
+
+                AdminMiddleware::handle();
+                $pageTitle = 'Admin Dashboard';
+                $viewFile = APP_PATH . '/views/admin/dashboard.php';
+                $viewData = [
+                    'pageTitle' => $pageTitle,
+                ];
                 break;
         }
 
