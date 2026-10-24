@@ -1610,3 +1610,899 @@ footer p {
         font-size: 0.8rem;
     }
 }
+/* Student portal */
+/* ========================================
+   Header Navigation
+======================================== */
+
+.header-navigation {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.header-navigation a {
+    color: #eaf0ff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.header-navigation a:hover {
+    text-decoration: underline;
+}
+
+.header-navigation .logout-button {
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+
+/* ========================================
+   Student Page Layout
+======================================== */
+
+.student-page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 34px 22px 52px;
+}
+
+.student-page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.student-page-heading h2 {
+    margin: 4px 0 8px;
+    color: #17233b;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+}
+
+.student-page-heading p:not(.eyebrow) {
+    margin: 0;
+    color: #65718a;
+}
+
+.eyebrow {
+    margin: 0;
+    color: #2455d6;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+}
+
+
+/* ========================================
+   Student Statistics
+======================================== */
+
+.student-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.student-stat-card,
+.student-panel {
+    background: #fff;
+    border: 1px solid #e4e9f2;
+    border-radius: 15px;
+    box-shadow: 0 5px 18px rgba(20, 37, 70, 0.04);
+}
+
+.student-stat-card {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.student-stat-card span {
+    color: #65718a;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.student-stat-card strong {
+    color: #17233b;
+    font-size: 2.1rem;
+    line-height: 1.1;
+}
+
+.student-stat-card small,
+.student-panel-heading p {
+    color: #7b8497;
+}
+
+
+/* ========================================
+   Student Panels
+======================================== */
+
+.student-panel {
+    padding: 24px;
+    margin-bottom: 22px;
+}
+
+.student-panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.student-panel-heading h3 {
+    margin: 0 0 6px;
+    color: #17233b;
+    font-size: 1.2rem;
+}
+
+.student-panel-heading p {
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+.student-panel-heading > a,
+.student-back-link a {
+    color: #2455d6;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+
+/* ========================================
+   Student Booking List
+======================================== */
+
+.student-booking-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-booking-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 15px 0;
+    border-top: 1px solid #edf0f5;
+}
+
+.booking-date-tile {
+    width: 54px;
+    min-width: 54px;
+    height: 58px;
+    border-radius: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #edf3ff;
+    color: #2455d6;
+}
+
+.booking-date-tile strong {
+    font-size: 1.25rem;
+    line-height: 1.1;
+}
+
+.booking-date-tile span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.booking-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.booking-main h4 {
+    margin: 0 0 5px;
+    color: #17233b;
+}
+
+.booking-main p {
+    margin: 0;
+    color: #68748b;
+    font-size: 0.9rem;
+}
+
+
+/* ========================================
+   Booking Status
+======================================== */
+
+.booking-status {
+    display: inline-flex;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.status-booked {
+    color: #167448;
+    background: #e7f8ef;
+}
+
+.status-waiting {
+    color: #915b00;
+    background: #fff4d8;
+}
+
+.status-cancelled {
+    color: #9a3540;
+    background: #ffeaec;
+}
+
+
+/* ========================================
+   Empty States
+======================================== */
+
+.student-empty {
+    padding: 30px 16px;
+    text-align: center;
+}
+
+.student-empty h3,
+.student-empty h4 {
+    margin: 0 0 8px;
+    color: #17233b;
+}
+
+.student-empty p {
+    color: #68748b;
+    margin: 0 auto 18px;
+    max-width: 520px;
+}
+
+.muted-text {
+    color: #9aa3b3;
+}
+
+.student-back-link {
+    margin-top: 18px;
+}
+
+
+/* ========================================
+   Student Quick Links
+======================================== */
+
+.student-quick-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.student-quick-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 19px;
+    border: 1px solid #e4e9f2;
+    border-radius: 13px;
+    text-decoration: none;
+    color: #17233b;
+    background: #fff;
+}
+
+.student-quick-link > span:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.student-quick-link small {
+    color: #748097;
+}
+
+.quick-link-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #edf3ff;
+    color: #2455d6;
+    font-size: 1.5rem;
+}
+
+.student-quick-link:hover {
+    border-color: #a9bdf7;
+    background: #fbfcff;
+}
+
+
+/* ========================================
+   Student Bookings Table
+======================================== */
+
+.student-table-wrap {
+    overflow-x: auto;
+}
+
+.student-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.student-table th {
+    padding: 13px 12px;
+    background: #f6f8fc;
+    color: #647089;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.student-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #edf0f5;
+    color: #35415a;
+    font-size: 0.92rem;
+}
+
+.student-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.student-table form {
+    margin: 0;
+}
+
+.button-small {
+    padding: 7px 11px !important;
+    font-size: 0.82rem !important;
+}
+
+
+/* ========================================
+   Booking Date Form
+======================================== */
+
+.booking-form-panel {
+    max-width: 850px;
+}
+
+.booking-date-form {
+    display: flex;
+    align-items: end;
+    gap: 14px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #edf0f5;
+}
+
+.booking-date-form .form-group {
+    flex: 1;
+}
+
+.booking-date-form input,
+.new-booking-form select {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    border: 1px solid #cfd7e5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    color: #26334d;
+    background: #fff;
+}
+
+.booking-date-form input:focus,
+.new-booking-form select:focus {
+    outline: 3px solid rgba(36, 85, 214, 0.15);
+    border-color: #2455d6;
+}
+
+.booking-date-form label {
+    color: #26334d;
+    font-weight: 700;
+}
+
+
+/* ========================================
+   Booking Rules and Forms
+======================================== */
+
+.booking-rules {
+    margin: 22px 0;
+    padding: 14px 16px;
+    border-radius: 9px;
+    background: #f3f6fc;
+    color: #596781;
+    font-size: 0.9rem;
+}
+
+.new-booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    max-width: 620px;
+}
+
+.new-booking-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.new-booking-form label {
+    color: #26334d;
+    font-weight: 700;
+}
+
+.new-booking-form small {
+    color: #7b8497;
+}
+
+.new-booking-form > .button {
+    align-self: flex-start;
+}
+
+
+/* ========================================
+   Alerts
+======================================== */
+
+.alert {
+    padding: 13px 16px;
+    border-radius: 9px;
+    margin-bottom: 18px;
+}
+
+.alert-error {
+    color: #9a2530;
+    background: #fff0f1;
+    border: 1px solid #ffd4d8;
+}
+
+.alert-success {
+    color: #176b43;
+    background: #eafaf1;
+    border: 1px solid #c6f0d8;
+}
+
+
+/* ========================================
+   Multi-Slot Booking Search
+======================================== */
+
+.booking-search-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    padding-bottom: 24px;
+}
+
+.booking-search-form .form-group {
+    max-width: 360px;
+}
+
+.time-slot-picker {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.time-slot-picker legend {
+    margin-bottom: 7px;
+    color: #26334d;
+    font-weight: 750;
+}
+
+.field-hint {
+    margin: 0 0 13px;
+    color: #748097;
+    font-size: 0.88rem;
+}
+
+
+/* ========================================
+   Time Slot Dropdown
+======================================== */
+
+.time-slot-dropdown {
+    position: relative;
+    width: min(260px, 100%);
+}
+
+.time-slot-dropdown-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 700;
+    list-style: none;
+}
+
+.time-slot-dropdown-summary::-webkit-details-marker {
+    display: none;
+}
+
+.time-slot-dropdown[open] .time-slot-dropdown-summary {
+    border-color: #2455d6;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.time-slot-menu {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 5px);
+    left: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3px;
+    width: 240px;
+    max-width: calc(100vw - 32px);
+    max-height: 168px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.time-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.time-slot-option {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    min-height: 30px;
+    padding: 5px 7px;
+    border: 1px solid #dce3ee;
+    border-radius: 6px;
+    background: #fff;
+    color: #34415b;
+    cursor: pointer;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.time-slot-option span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-slot-option input {
+    margin: 0;
+    accent-color: #2455d6;
+}
+
+.time-slot-option:has(input:checked),
+.time-slot-option.is-selected {
+    border-color: #2455d6;
+    background: #edf3ff;
+    color: #1d46b5;
+}
+
+.time-slot-option.is-past {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.booking-search-form > .button {
+    align-self: flex-start;
+}
+
+
+/* ========================================
+   Availability Results
+======================================== */
+
+.availability-results {
+    margin-top: 26px;
+}
+
+.availability-results .student-panel-heading {
+    margin-bottom: 18px;
+}
+
+.selected-slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.slot-computer-group {
+    padding: 17px;
+    border: 1px solid #e1e7f1;
+    border-radius: 12px;
+    background: #fcfdff;
+}
+
+.slot-computer-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.slot-computer-heading h4 {
+    margin: 0;
+    color: #17233b;
+    font-size: 1rem;
+}
+
+.slot-computer-heading > span {
+    color: #68748b;
+    font-size: 0.82rem;
+}
+
+
+/* ========================================
+   Available Computer Cards
+======================================== */
+
+.available-computer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.available-computer-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #dce3ee;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.available-computer-option:has(input:checked) {
+    border-color: #2455d6;
+    background: #edf3ff;
+}
+
+.available-computer-option input {
+    margin-top: 3px;
+    accent-color: #2455d6;
+}
+
+.available-computer-option > span {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.available-computer-option strong {
+    color: #26334d;
+    overflow-wrap: anywhere;
+}
+
+.available-computer-option small {
+    color: #748097;
+    font-size: 0.78rem;
+}
+
+.no-computers-message {
+    margin: 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #fff4e5;
+    color: #8a5700;
+    font-size: 0.88rem;
+}
+
+.new-booking-form {
+    max-width: none;
+}
+
+.new-booking-form > .button {
+    align-self: flex-start;
+}
+
+.booking-prompt {
+    margin-top: 12px;
+}
+
+
+/* ========================================
+   Responsive Layout
+======================================== */
+
+@media (max-width: 900px) {
+    .time-slot-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .available-computer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .student-page {
+        padding: 24px 14px 38px;
+    }
+
+    .student-page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .student-stat-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .student-stat-card {
+        padding: 17px;
+    }
+
+    .student-stat-card strong {
+        font-size: 1.7rem;
+    }
+
+    .student-panel {
+        padding: 16px;
+    }
+
+    .student-quick-links {
+        grid-template-columns: 1fr;
+    }
+
+    .student-panel-heading {
+        align-items: flex-start;
+    }
+
+    .student-booking-row {
+        flex-wrap: wrap;
+    }
+
+    .booking-status {
+        margin-left: 70px;
+    }
+
+    .booking-date-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .booking-date-form .button {
+        width: 100%;
+    }
+
+    .new-booking-form > .button {
+        width: 100%;
+    }
+
+    .header-navigation {
+        gap: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .time-slot-dropdown {
+        width: 100%;
+    }
+
+    .time-slot-menu {
+        width: min(320px, calc(100vw - 32px));
+    }
+
+    .time-slot-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .available-computer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .slot-computer-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .booking-search-form > .button,
+    .new-booking-form > .button {
+        width: 100%;
+    }
+}
+
+/* Fix: Compact time-slot dropdown */
+
+.time-slot-dropdown {
+    position: relative;
+    width: 326px;
+    max-width: 100%;
+}
+
+.time-slot-dropdown-summary {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    font-size: 1rem;
+}
+
+.time-slot-menu {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 5px);
+    left: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.time-slot-menu .time-slot-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    white-space: normal;
+}
+
+.time-slot-menu .time-slot-option input[type="checkbox"] {
+    appearance: auto;
+    -webkit-appearance: checkbox;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0;
+    accent-color: #2455d6;
+}
+
+.time-slot-menu .time-slot-option span {
+    overflow: visible;
+    text-overflow: clip;
+}
+
+@media (max-width: 600px) {
+    .time-slot-dropdown {
+        width: 100%;
+    }
+
+    .time-slot-menu {
+        max-height: 200px;
+    }
+}
