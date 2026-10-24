@@ -113,5 +113,31 @@ final class ComputerRepository
         return $this->pdo->query($sql)->fetchAll();
     }
 
+    public function createComputer(
+        string $computerName,
+        ?string $description
+    ): int {
+        $sql = '
+            insert into computers (
+                computer_name,
+                description
+            )
+            values (
+                :computer_name,
+                :description
+            )
+            returning computer_id
+        ';
+
+        $statement = $this->pdo->prepare($sql);
+
+        $statement->execute([
+            'computer_name' => $computerName,
+            'description' => $description,
+        ]);
+
+        return (int) $statement->fetchColumn();
+    }
+
 
 }

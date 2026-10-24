@@ -13,6 +13,97 @@ $computers = $computers ?? [];
         View all laboratory computers, including inactive ones.
     </p>
 
+    <div class="computer-actions">
+        <a
+            class="dashboard-button"
+            href="<?= htmlspecialchars(
+                rtrim(APP_BASE_URL, '/') . '/admin',
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>"
+        >Dashboard</a>
+
+        <button
+            type="button"
+            id="toggle-add-computer"
+            aria-expanded="false"
+            aria-controls="add-computer-form"
+        >
+            + Add Computer
+        </button>
+    </div>
+
+    <?php if (!empty($success)): ?>
+        <p class="success-message" role="status">
+            Computer added successfully.
+        </p>
+    <?php endif; ?>
+
+    <?php if (!empty($error)): ?>
+        <p class="form-error" role="alert">
+            <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+        </p>
+    <?php endif; ?>
+
+    <section id="add-computer-form" class="add-computer-form" hidden>
+        <h3>Add a Laboratory Computer</h3>
+
+        <form
+            method="POST"
+            action="<?= htmlspecialchars(
+                rtrim(APP_BASE_URL, '/') . '/admin/computers',
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>"
+        >
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= htmlspecialchars(
+                    $csrfToken,
+                    ENT_QUOTES,
+                    'UTF-8'
+                ) ?>"
+            >
+
+            <div class="form-group">
+                <label for="computer_name">Computer Name</label>
+                <input
+                    type="text"
+                    id="computer_name"
+                    name="computer_name"
+                    maxlength="50"
+                    required
+                    value="<?= htmlspecialchars(
+                        $computerName ?? '',
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) ?>"
+                    placeholder="e.g. LAB-PC-01"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description (optional)</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="3"
+                    placeholder="Enter computer specifications or details"
+                ><?= htmlspecialchars(
+                    $description ?? '',
+                    ENT_QUOTES,
+                    'UTF-8'
+                ) ?></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Save Computer</button>
+                <button type="button" id="cancel-add-computer">Cancel</button>
+            </div>
+        </form>
+    </section>
+
     <div class="table-wrapper">
         <table>
             <thead>
@@ -87,3 +178,32 @@ $computers = $computers ?? [];
         </table>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleButton = document.getElementById('toggle-add-computer');
+    const cancelButton = document.getElementById('cancel-add-computer');
+    const formSection = document.getElementById('add-computer-form');
+
+    function setFormVisible(visible) {
+        formSection.hidden = !visible;
+        toggleButton.setAttribute('aria-expanded', String(visible));
+
+        if (visible) {
+            document.getElementById('computer_name').focus();
+        }
+    }
+
+    toggleButton.addEventListener('click', function () {
+        setFormVisible(formSection.hidden);
+    });
+
+    cancelButton.addEventListener('click', function () {
+        setFormVisible(false);
+    });
+
+    <?php if (!empty($error)): ?>
+    setFormVisible(true);
+    <?php endif; ?>
+});
+</script>

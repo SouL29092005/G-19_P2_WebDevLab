@@ -50,6 +50,7 @@ $routes = [
     ],
     'POST' => [
         '/login' => 'login',
+        '/admin/computers' => 'admin_computers',
     ],
 ];
 
