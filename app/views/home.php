@@ -10,7 +10,11 @@
             time slot, and manage your reservations in one place.
         </p>
 
-        <a class="button button-primary" href="#how-it-works">
+        <a class="button button-primary" href="<?= htmlspecialchars(
+            rtrim(APP_BASE_URL, '/') . '/login.php',
+            ENT_QUOTES,
+            'UTF-8'
+        ) ?>">
             Get Started
         </a>
     </div>

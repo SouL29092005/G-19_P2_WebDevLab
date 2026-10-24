@@ -43,7 +43,11 @@ if ($requestPath === '') {
 $routes = [
     'GET' => [
         '/' => 'home',
+        '/login' => 'login',
         '/availability' => 'availability',
+    ],
+    'POST' => [
+        '/login' => 'login',
     ],
 ];
 
@@ -65,6 +69,27 @@ if ($route === null) {
         switch ($route) {
             case 'home':
                 $viewFile = APP_PATH . '/views/home.php';
+                break;
+
+            case 'login':
+                if (isset($_SESSION['user']['role'])) {
+                    $role = $_SESSION['user']['role'];
+                    $destination = $role === 'admin'
+                        ? rtrim(APP_BASE_URL, '/') . '/admin/'
+                        : rtrim(APP_BASE_URL, '/') . '/dashboard.php';
+
+                    header('Location: ' . $destination, true, 303);
+                    exit;
+                }
+
+                require_once CONFIG_PATH . '/database.php';
+                require_once APP_PATH
+                    . '/controllers/AuthController.php';
+
+                $authController = new AuthController($pdo);
+                $viewData = $authController->login();
+                $pageTitle = $viewData['pageTitle'];
+                $viewFile = APP_PATH . '/views/login.php';
                 break;
 
             case 'availability':
