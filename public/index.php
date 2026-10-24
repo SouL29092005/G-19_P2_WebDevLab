@@ -47,10 +47,12 @@ $routes = [
         '/availability' => 'availability',
         '/admin' => 'admin',
         '/admin/computers' => 'admin_computers',
+        '/admin/users' => 'admin_users',
     ],
     'POST' => [
         '/login' => 'login',
         '/admin/computers' => 'admin_computers',
+        '/admin/users' => 'admin_users',
     ],
 ];
 
@@ -111,6 +113,7 @@ if ($route === null) {
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/availability.php';
                 break;
+
             case 'admin':
                 require_once APP_PATH
                     . '/middleware/AdminMiddleware.php';
@@ -122,6 +125,7 @@ if ($route === null) {
                     'pageTitle' => $pageTitle,
                 ];
                 break;
+
             case 'admin_computers':
                 require_once APP_PATH
                     . '/middleware/AdminMiddleware.php';
@@ -142,6 +146,29 @@ if ($route === null) {
                 $viewData = $controller->index();
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/admin/computers.php';
+
+                break;
+                
+            case 'admin_users':
+                require_once APP_PATH
+                    . '/middleware/AdminMiddleware.php';
+
+                AdminMiddleware::handle();
+
+                require_once CONFIG_PATH . '/database.php';
+
+                require_once APP_PATH
+                    . '/repositories/UserRepository.php';
+
+                require_once APP_PATH
+                    . '/controllers/UserController.php';
+
+                $repository = new UserRepository($pdo);
+                $controller = new UserController($repository);
+
+                $viewData = $controller->index();
+                $pageTitle = $viewData['pageTitle'];
+                $viewFile = APP_PATH . '/views/admin/users.php';
 
                 break;
         }
