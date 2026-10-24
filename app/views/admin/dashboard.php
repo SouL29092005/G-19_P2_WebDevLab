@@ -13,7 +13,22 @@ declare(strict_types=1);
     </p>
 
     <p>
-        Admin authorization is active. Dashboard features
-        will be added incrementally.
+        Admin authorization is active.
     </p>
+
+    <nav class="admin-navigation">
+        <h3>Manage System</h3>
+
+        <ul>
+            <li>
+                <a href="<?= htmlspecialchars(
+                    rtrim(APP_BASE_URL, '/') . '/admin/computers',
+                    ENT_QUOTES,
+                    'UTF-8'
+                ) ?>">
+                    Manage Computers
+                </a>
+            </li>
+        </ul>
+    </nav>
 </section>

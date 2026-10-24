@@ -95,4 +95,23 @@ final class ComputerRepository
 
         return $statement->fetchAll();
     }
+
+    
+    public function getAllComputers(): array
+    {
+        $sql = '
+            select
+                computer_id,
+                computer_name,
+                description,
+                is_active,
+                created_at
+            from computers
+            order by computer_name
+        ';
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+
 }

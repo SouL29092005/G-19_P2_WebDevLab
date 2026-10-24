@@ -46,6 +46,7 @@ $routes = [
         '/login' => 'login',
         '/availability' => 'availability',
         '/admin' => 'admin',
+        '/admin/computers' => 'admin_computers',
     ],
     'POST' => [
         '/login' => 'login',
@@ -119,6 +120,28 @@ if ($route === null) {
                 $viewData = [
                     'pageTitle' => $pageTitle,
                 ];
+                break;
+            case 'admin_computers':
+                require_once APP_PATH
+                    . '/middleware/AdminMiddleware.php';
+
+                AdminMiddleware::handle();
+
+                require_once CONFIG_PATH . '/database.php';
+
+                require_once APP_PATH
+                    . '/repositories/ComputerRepository.php';
+
+                require_once APP_PATH
+                    . '/controllers/AdminComputerController.php';
+
+                $repository = new ComputerRepository($pdo);
+                $controller = new AdminComputerController($repository);
+
+                $viewData = $controller->index();
+                $pageTitle = $viewData['pageTitle'];
+                $viewFile = APP_PATH . '/views/admin/computers.php';
+
                 break;
         }
 

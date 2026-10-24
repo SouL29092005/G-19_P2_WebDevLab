@@ -755,6 +755,99 @@ footer p {
     font-weight: 700;
 }
 
+.admin-computers {
+    width: 100%;
+    padding: 28px;
+    color: #172033;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.admin-computers>h2 {
+    margin-bottom: 8px;
+    color: #172554;
+    font-size: 1.65rem;
+    line-height: 1.3;
+}
+
+.admin-computers>p {
+    margin-bottom: 24px;
+    color: #64748b;
+}
+
+.admin-computers .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.admin-computers table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.admin-computers th,
+.admin-computers td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.admin-computers th {
+    color: #334155;
+    background: #f1f5f9;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-computers tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-computers tbody tr:hover td {
+    background: #f8fafc;
+}
+
+.admin-computers td:nth-child(1) {
+    width: 70px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.admin-computers td:nth-child(2) {
+    color: #1e3a8a;
+    font-weight: 700;
+}
+
+.status-active,
+.status-inactive {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-active {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.status-inactive {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
 @media (max-width: 700px) {
     main {
         padding: 28px 18px 36px;
@@ -806,6 +899,14 @@ footer p {
 }
 
 @media (max-width: 600px) {
+    .admin-computers {
+        padding: 18px;
+    }
+
+    .admin-computers>h2 {
+        font-size: 1.4rem;
+    }
+
     header {
         padding: 16px;
     }
