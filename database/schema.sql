@@ -64,6 +64,10 @@ create table bookings (
 
     hold_expires_at timestamptz,
 
+    booking_group_id uuid,
+
+    booking_group_size integer,
+
     created_at timestamptz not null default current_timestamp,
 
     confirmed_at timestamptz,
@@ -75,6 +79,15 @@ create table bookings (
             (status = 'waiting' and hold_expires_at is not null)
             or
             (status <> 'waiting' and hold_expires_at is null)
+        ),
+
+    constraint valid_booking_group
+        check (
+            (booking_group_id is null and booking_group_size is null)
+            or
+            (booking_group_id is not null
+                and booking_group_size is not null
+                and booking_group_size > 0)
         ),
 
     constraint valid_confirmation
@@ -104,6 +117,14 @@ create index idx_bookings_user_date
 create index idx_bookings_hold_expiration
     on bookings (hold_expires_at)
     where status = 'waiting';
+
+create index idx_bookings_group_id
+    on bookings (booking_group_id)
+    where booking_group_id is not null;
+
+create unique index uq_booking_group_slot
+    on bookings (booking_group_id, slot_id)
+    where booking_group_id is not null;
 
 
 -- 6. PREVENT CONFLICTING RESERVATIONS

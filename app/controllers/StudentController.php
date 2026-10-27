@@ -79,6 +79,34 @@ final class StudentController
 
         if (($_GET['success'] ?? '') === 'cancelled') {
             $success = 'Booking cancelled successfully.';
+        } elseif (($_GET['success'] ?? '') === 'hold-cancelled') {
+            $success = 'The temporary reservation was released.';
+        } elseif (
+            ($_GET['success'] ?? '') === 'created'
+            && is_string($_GET['group'] ?? null)
+            && $this->isUuid($_GET['group'])
+        ) {
+            $confirmed = $this->bookings->getConfirmedBookingGroup(
+                (int) $_SESSION['user']['id'],
+                $_GET['group']
+            );
+
+            if ($confirmed !== []) {
+                $slots = array_map(
+                    static fn(array $booking): string =>
+                        substr((string) $booking['start_time'], 0, 5)
+                        . '–'
+                        . substr((string) $booking['end_time'], 0, 5),
+                    $confirmed
+                );
+                $success = 'Booking confirmed: '
+                    . $confirmed[0]['computer_name']
+                    . ' on '
+                    . date('d M Y', strtotime($confirmed[0]['booking_date']))
+                    . ' for '
+                    . implode(', ', $slots)
+                    . '.';
+            }
         }
 
         return [
@@ -95,235 +123,315 @@ final class StudentController
     public function newBooking(): array
     {
         $error = null;
-
         $timezone = new DateTimeZone(APP_TIMEZONE);
         $today = new DateTimeImmutable('today', $timezone);
         $maxDate = $today->modify('+3 days');
+        $todayString = $today->format('Y-m-d');
+        $maxDateString = $maxDate->format('Y-m-d');
+        $dateInput = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
+            ? ($_POST['booking_date'] ?? null)
+            : ($_GET['date'] ?? $todayString);
+        $date = is_string($dateInput) ? $dateInput : $todayString;
 
-        $date = $_POST['booking_date']
-            ?? $_GET['date']
-            ?? $today->format('Y-m-d');
-
-        if (
-            !is_string($date)
-            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)
-        ) {
-            $date = $today->format('Y-m-d');
-        }
-
-        $parsed = DateTimeImmutable::createFromFormat(
-            '!Y-m-d',
-            $date,
-            $timezone
-        );
-
-        if (
-            !$parsed
-            || $parsed->format('Y-m-d') !== $date
-            || $parsed < $today
-            || $parsed > $maxDate
-        ) {
+        if (!$this->isDateInWindow($date, $today, $maxDate, $timezone)) {
             $error = 'Choose a valid date from today through the next 3 days.';
-            $date = $today->format('Y-m-d');
+            $date = $todayString;
         }
 
         $timeSlots = $this->bookings->getTimeSlots();
-
         $validSlotIds = array_map(
             static fn(array $slot): int => (int) $slot['slot_id'],
             $timeSlots
         );
+        $selectedSlotIds = [];
+        $requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $requestedSlots = $requestMethod === 'POST'
+            ? ($_POST['slot_ids'] ?? null)
+            : ($_GET['slots'] ?? []);
 
-        $requestedSlots = $_POST['slot_ids']
-            ?? $_GET['slots']
-            ?? [];
+        try {
+            $selectedSlotIds = $this->parseSlotIds(
+                $requestedSlots,
+                $validSlotIds
+            );
 
-        if (!is_array($requestedSlots)) {
-            $requestedSlots = [];
-        }
+            if ($date === $todayString && $selectedSlotIds !== []) {
+                $now = new DateTimeImmutable('now', $timezone);
+                $slotsById = [];
+                foreach ($timeSlots as $slot) {
+                    $slotsById[(int) $slot['slot_id']] = (string) $slot['start_time'];
+                }
 
-        $selectedSlotIds = array_values(array_unique(array_filter(
-            array_map(
-                static function ($id): int {
-                    return is_scalar($id)
-                        && ctype_digit((string) $id)
-                            ? (int) $id
-                            : 0;
-                },
-                $requestedSlots
-            ),
-            static fn(int $id): bool =>
-                in_array($id, $validSlotIds, true)
-        )));
-
-        if ($date === $today->format('Y-m-d')) {
-            $currentTimeForSelection = (
-                new DateTimeImmutable('now', $timezone)
-            )->format('H:i:s');
-
-            $slotStartTimes = [];
-
-            foreach ($timeSlots as $slot) {
-                $slotStartTimes[(int) $slot['slot_id']] =
-                    (string) $slot['start_time'];
+                foreach ($selectedSlotIds as $slotId) {
+                    if ($slotsById[$slotId] <= $now->format('H:i:s')) {
+                        throw new InvalidArgumentException(
+                            'One or more selected slots have already started. Update your selection.'
+                        );
+                    }
+                }
             }
-
-            $selectedSlotIds = array_values(array_filter(
-                $selectedSlotIds,
-                static fn(int $id): bool =>
-                    isset($slotStartTimes[$id])
-                    && $slotStartTimes[$id] > $currentTimeForSelection
-            ));
+        } catch (InvalidArgumentException $exception) {
+            $error = $exception->getMessage();
+            $selectedSlotIds = [];
         }
 
-        sort($selectedSlotIds);
-
-        if (
-            ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
-            && $error === null
-        ) {
+        if ($requestMethod === 'POST') {
             if (!$this->validCsrf()) {
                 $error = 'Your session expired. Refresh the page and try again.';
-            } else {
-                $selectedComputers = $_POST['computer_for_slot'] ?? [];
+            } elseif (($_POST['action'] ?? '') !== 'hold') {
+                $error = 'Invalid booking request.';
+            } elseif ($error === null) {
+                $computerInput = $_POST['computer_id'] ?? null;
 
                 if (
-                    !is_array($selectedComputers)
+                    !is_string($computerInput)
+                    || !ctype_digit($computerInput)
+                    || (int) $computerInput < 1
                     || $selectedSlotIds === []
                 ) {
-                    $error = 'Select a date, at least one time slot, and a computer for each slot.';
+                    $error = 'Select one computer and at least one valid time slot.';
                 } else {
-                    $selections = [];
+                    try {
+                        $groupId = $this->bookings->createHoldGroup(
+                            (int) $_SESSION['user']['id'],
+                            $date,
+                            (int) $computerInput,
+                            $selectedSlotIds
+                        );
 
-                    foreach ($selectedComputers as $slotId => $computerId) {
-                        if (
-                            !is_scalar($slotId)
-                            || !ctype_digit((string) $slotId)
-                            || !is_scalar($computerId)
-                            || !ctype_digit((string) $computerId)
-                        ) {
-                            $error = 'One of your computer selections is invalid. Please try again.';
-                            break;
+                        if ($groupId === false) {
+                            $error = 'That computer is no longer available for every selected slot. No slots were held; update your selection.';
+                        } else {
+                            header(
+                                'Location: '
+                                . rtrim(APP_BASE_URL, '/')
+                                . '/confirm-booking.php?group='
+                                . rawurlencode($groupId),
+                                true,
+                                303
+                            );
+                            exit;
                         }
-
-                        $slotId = (int) $slotId;
-                        $computerId = (int) $computerId;
-
-                        if (!in_array($slotId, $selectedSlotIds, true)) {
-                            $error = 'Please choose computers only for the time slots you selected.';
-                            break;
+                    } catch (PDOException $exception) {
+                        if ($exception->getCode() === '42703') {
+                            error_log('Booking group database migration is missing: ' . $exception->getMessage());
+                            $error = 'Booking setup needs an update. Apply database/migrations/20261027_add_booking_group.sql, then try again.';
+                        } else {
+                            throw $exception;
                         }
-
-                        $selections[] = [
-                            'slot_id' => $slotId,
-                            'computer_id' => $computerId,
-                        ];
-                    }
-
-                    if (
-                        $error === null
-                        && count($selections) !== count($selectedSlotIds)
-                    ) {
-                        $error = 'Choose one available computer for every selected time slot.';
-                    }
-
-                    if ($error === null) {
-                        try {
-                            $currentTime = (
-                                new DateTimeImmutable('now', $timezone)
-                            )->format('H:i:s');
-
-                            $available = $this->bookings
-                                ->getAvailableCombinations(
-                                    $date,
-                                    $today->format('Y-m-d'),
-                                    $currentTime,
-                                    $selectedSlotIds
-                                );
-
-                            foreach ($selections as $selection) {
-                                $found = false;
-
-                                foreach ($available as $combination) {
-                                    if (
-                                        (int) $combination['slot_id']
-                                            === $selection['slot_id']
-                                        && (int) $combination['computer_id']
-                                            === $selection['computer_id']
-                                    ) {
-                                        $found = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!$found) {
-                                    $error = 'One or more selected computers are no longer available. Review the updated availability and try again.';
-                                    break;
-                                }
-                            }
-
-                            if ($error === null) {
-                                $this->bookings->createBookings(
-                                    (int) $_SESSION['user']['id'],
-                                    $date,
-                                    $selections
-                                );
-
-                                header(
-                                    'Location: '
-                                    . rtrim(APP_BASE_URL, '/')
-                                    . '/my-bookings.php?success=created',
-                                    true,
-                                    303
-                                );
-
-                                exit;
-                            }
-                        } catch (PDOException $exception) {
-                            if ($exception->getCode() === '23505') {
-                                $error = 'A selected slot was just booked by someone else. No bookings were made; please review availability and try again.';
-                            } else {
-                                throw $exception;
-                            }
-                        } catch (InvalidArgumentException $exception) {
-                            $error = $exception->getMessage();
-                        }
+                    } catch (InvalidArgumentException $exception) {
+                        $error = $exception->getMessage();
                     }
                 }
             }
         }
 
-        $currentTime = (
-            new DateTimeImmutable('now', $timezone)
-        )->format('H:i:s');
-
-        $availableCombinations = $selectedSlotIds === []
+        $currentTime = (new DateTimeImmutable('now', $timezone))->format('H:i:s');
+        $availableComputers = $selectedSlotIds === []
             ? []
-            : $this->bookings->getAvailableCombinations(
+            : $this->bookings->getAvailableComputersAcrossSlots(
                 $date,
-                $today->format('Y-m-d'),
+                $todayString,
                 $currentTime,
                 $selectedSlotIds
             );
 
-        $computersBySlot = [];
-
-        foreach ($availableCombinations as $combination) {
-            $computersBySlot[(int) $combination['slot_id']][] =
-                $combination;
-        }
-
         return [
             'pageTitle' => 'New Booking',
             'selectedDate' => $date,
-            'minDate' => $today->format('Y-m-d'),
-            'maxDate' => $maxDate->format('Y-m-d'),
+            'minDate' => $todayString,
+            'maxDate' => $maxDateString,
             'timeSlots' => $timeSlots,
             'selectedSlotIds' => $selectedSlotIds,
-            'computersBySlot' => $computersBySlot,
+            'availableComputers' => $availableComputers,
+            'csrfToken' => $this->csrfToken(),
+            'error' => $error,
+            'success' => ($_GET['success'] ?? '') === 'hold-cancelled'
+                ? 'The temporary reservation was released.'
+                : null,
+        ];
+    }
+
+    public function availability(): array
+    {
+        $timezone = new DateTimeZone(APP_TIMEZONE);
+        $today = new DateTimeImmutable('today', $timezone);
+        $maxDate = $today->modify('+3 days');
+        $date = $_GET['date'] ?? null;
+
+        if (
+            !is_string($date)
+            || !$this->isDateInWindow($date, $today, $maxDate, $timezone)
+        ) {
+            throw new InvalidArgumentException(
+                'Choose a valid date from today through the next 3 days.'
+            );
+        }
+
+        $slots = $this->parseSlotIds(
+            $_GET['slots'] ?? [],
+            array_map(
+                static fn(array $slot): int => (int) $slot['slot_id'],
+                $this->bookings->getTimeSlots()
+            )
+        );
+
+        if ($slots === []) {
+            return ['computers' => [], 'slotIds' => []];
+        }
+
+        $now = new DateTimeImmutable('now', $timezone);
+        if ($date === $today->format('Y-m-d')) {
+            $slotById = [];
+            foreach ($this->bookings->getTimeSlots() as $slot) {
+                $slotById[(int) $slot['slot_id']] = (string) $slot['start_time'];
+            }
+            foreach ($slots as $slotId) {
+                if ($slotById[$slotId] <= $now->format('H:i:s')) {
+                    throw new InvalidArgumentException(
+                        'One or more selected slots have already started.'
+                    );
+                }
+            }
+        }
+
+        return [
+            'computers' => $this->bookings->getAvailableComputersAcrossSlots(
+                $date,
+                $today->format('Y-m-d'),
+                $now->format('H:i:s'),
+                $slots
+            ),
+            'slotIds' => $slots,
+            'slots' => array_values(array_filter(
+                $this->bookings->getTimeSlots(),
+                static fn(array $slot): bool =>
+                    in_array((int) $slot['slot_id'], $slots, true)
+            )),
+        ];
+    }
+
+    public function confirmBooking(): array
+    {
+        $error = null;
+        $groupInput = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
+            ? ($_POST['group_id'] ?? null)
+            : ($_GET['group'] ?? null);
+        $groupId = is_string($groupInput) && $this->isUuid($groupInput)
+            ? $groupInput
+            : null;
+        $userId = (int) $_SESSION['user']['id'];
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            if (!$this->validCsrf()) {
+                $error = 'Your session expired. Refresh the page and try again.';
+            } elseif ($groupId === null) {
+                $error = 'This temporary reservation is invalid or has expired.';
+            } else {
+                $action = $_POST['action'] ?? '';
+
+                if ($action === 'cancel') {
+                    $this->bookings->releaseWaitingBookingGroup($userId, $groupId);
+                    header(
+                        'Location: '
+                        . rtrim(APP_BASE_URL, '/')
+                        . '/new-booking.php?success=hold-cancelled',
+                        true,
+                        303
+                    );
+                    exit;
+                }
+
+                if ($action !== 'confirm') {
+                    $error = 'Invalid confirmation request.';
+                } elseif ($this->bookings->confirmBookingGroup($userId, $groupId)) {
+                    header(
+                        'Location: '
+                        . rtrim(APP_BASE_URL, '/')
+                        . '/my-bookings.php?success=created&group='
+                        . rawurlencode($groupId),
+                        true,
+                        303
+                    );
+                    exit;
+                } else {
+                    $error = 'This hold expired or is incomplete. No bookings were confirmed; please select your slots again.';
+                }
+            }
+        }
+
+        $group = $groupId === null
+            ? []
+            : $this->bookings->getWaitingBookingGroup($userId, $groupId);
+
+        if ($group === [] && $error === null) {
+            $error = 'This temporary reservation is unavailable or has expired.';
+        }
+
+        return [
+            'pageTitle' => 'Confirm Booking',
+            'groupId' => $groupId,
+            'bookingGroup' => $group,
+            'remainingSeconds' => $group === []
+                ? 0
+                : max(0, strtotime((string) $group[0]['hold_expires_at']) - time()),
             'csrfToken' => $this->csrfToken(),
             'error' => $error,
         ];
+    }
+
+    private function isDateInWindow(
+        string $date,
+        DateTimeImmutable $today,
+        DateTimeImmutable $maxDate,
+        DateTimeZone $timezone
+    ): bool {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return false;
+        }
+
+        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date, $timezone);
+
+        return $parsed !== false
+            && $parsed->format('Y-m-d') === $date
+            && $parsed >= $today
+            && $parsed <= $maxDate;
+    }
+
+    private function parseSlotIds($input, array $validSlotIds): array
+    {
+        if (!is_array($input)) {
+            throw new InvalidArgumentException('Choose valid time slots.');
+        }
+
+        $slotIds = [];
+        foreach ($input as $id) {
+            if (
+                !is_scalar($id)
+                || !ctype_digit((string) $id)
+                || (int) $id < 1
+                || !in_array((int) $id, $validSlotIds, true)
+                || in_array((int) $id, $slotIds, true)
+            ) {
+                throw new InvalidArgumentException(
+                    'One or more selected time slots are invalid.'
+                );
+            }
+
+            $slotIds[] = (int) $id;
+        }
+
+        sort($slotIds);
+
+        return $slotIds;
+    }
+
+    private function isUuid(string $value): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $value
+        ) === 1;
     }
 
     private function csrfToken(): string
