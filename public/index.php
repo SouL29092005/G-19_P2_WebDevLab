@@ -110,6 +110,33 @@ if ($route === null) {
                 $controller = new ComputerController($repository);
 
                 $viewData = $controller->index();
+
+                if (
+                    $requestMethod === 'GET'
+                    && ($_GET['ajax'] ?? null) === 'availability'
+                ) {
+                    header('Content-Type: application/json; charset=utf-8');
+
+                    if ($viewData['errorMessage'] !== null) {
+                        http_response_code(422);
+                        echo json_encode([
+                            'success' => false,
+                            'error' => $viewData['errorMessage'],
+                        ], JSON_THROW_ON_ERROR);
+                    } else {
+                        echo json_encode([
+                            'success' => true,
+                            'availability' => $viewData['availability'],
+                            'updated_at' => (new DateTimeImmutable(
+                                'now',
+                                new DateTimeZone(APP_TIMEZONE)
+                            ))->format(DATE_ATOM),
+                        ], JSON_THROW_ON_ERROR);
+                    }
+
+                    exit;
+                }
+
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/availability.php';
                 break;

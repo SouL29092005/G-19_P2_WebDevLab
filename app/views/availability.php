@@ -19,8 +19,13 @@ declare(strict_types=1);
         </p>
     <?php endif; ?>
 
-    <form method="GET" action="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/availability', ENT_QUOTES, 'UTF-8'
-    ) ?>" class="date-filter">
+    <form
+        method="GET"
+        action="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/availability', ENT_QUOTES, 'UTF-8') ?>"
+        class="date-filter"
+        id="availability-filter-form"
+        data-endpoint="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/availability', ENT_QUOTES, 'UTF-8') ?>"
+    >
         <div class="filter-field">
             <label for="booking-date">Reservation date</label>
 
@@ -97,78 +102,68 @@ declare(strict_types=1);
         </div>
     </form>
 
-    <?php if ($availability === []): ?>
-        <p class="empty-state">
-            No computers match the selected filters.
-        </p>
-    <?php else: ?>
-        <?php
-        $currentComputerId = null;
-        ?>
+    <p id="availability-updated" class="availability-updated" role="status">
+        Availability refreshes automatically every 5 seconds.
+    </p>
 
-        <div class="computer-list">
-            <?php foreach ($availability as $slot): ?>
-                <?php
-                if ($currentComputerId !== $slot['computer_id']) {
-                    if ($currentComputerId !== null) {
+    <div id="availability-results">
+        <?php if ($availability === []): ?>
+            <p class="empty-state">
+                No computers match the selected filters.
+            </p>
+        <?php else: ?>
+            <?php $currentComputerId = null; ?>
+
+            <div class="computer-list">
+                <?php foreach ($availability as $slot): ?>
+                    <?php
+                    if ($currentComputerId !== $slot['computer_id']) {
+                        if ($currentComputerId !== null) {
+                            ?>
+                            </div>
+                            </section>
+                            <?php
+                        }
+
+                        $currentComputerId = $slot['computer_id'];
                         ?>
-                        </div>
-                        </section>
+                        <section class="computer-card">
+                            <h3><?= htmlspecialchars($slot['computer_name'], ENT_QUOTES, 'UTF-8') ?></h3>
+
+                            <?php if (!empty($slot['description'])): ?>
+                                <p class="computer-description">
+                                    <?= htmlspecialchars($slot['description'], ENT_QUOTES, 'UTF-8') ?>
+                                </p>
+                            <?php endif; ?>
+
+                            <div class="slot-list">
                         <?php
                     }
 
-                    $currentComputerId = $slot['computer_id'];
+                    $startTime = substr($slot['start_time'], 0, 5);
+                    $endTime = substr($slot['end_time'], 0, 5);
+                    $status = $slot['status'];
                     ?>
-                    <section class="computer-card">
-                        <h3>
-                            <?= htmlspecialchars(
-                                $slot['computer_name'],
-                                ENT_QUOTES,
-                                'UTF-8'
-                            ) ?>
-                        </h3>
 
-                        <?php if (!empty($slot['description'])): ?>
-                            <p class="computer-description">
-                                <?= htmlspecialchars(
-                                    $slot['description'],
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>
-                            </p>
-                        <?php endif; ?>
+                    <div class="slot-item">
+                        <span class="slot-time">
+                            <?= htmlspecialchars($startTime, ENT_QUOTES, 'UTF-8') ?>
+                            –
+                            <?= htmlspecialchars($endTime, ENT_QUOTES, 'UTF-8') ?>
+                        </span>
 
-                        <div class="slot-list">
-                    <?php
-                }
+                        <span class="slot-status status-<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>">
+                            <?= htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') ?>
+                        </span>
+                    </div>
+                <?php endforeach; ?>
 
-                $startTime = substr($slot['start_time'], 0, 5);
-                $endTime = substr($slot['end_time'], 0, 5);
-                $status = $slot['status'];
-                ?>
-
-                <div class="slot-item">
-                    <span class="slot-time">
-                        <?= htmlspecialchars($startTime, ENT_QUOTES, 'UTF-8') ?>
-                        –
-                        <?= htmlspecialchars($endTime, ENT_QUOTES, 'UTF-8') ?>
-                    </span>
-
-                    <span class="slot-status status-<?= htmlspecialchars(
-                        $status,
-                        ENT_QUOTES,
-                        'UTF-8'
-                    ) ?>">
-                        <?= htmlspecialchars(
-                            ucfirst($status),
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ) ?>
-                    </span>
                 </div>
-            <?php endforeach; ?>
-
+                </section>
             </div>
-            </section>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </section>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/assets/js/availability.js', ENT_QUOTES, 'UTF-8') ?>" defer></script>

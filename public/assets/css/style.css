@@ -268,6 +268,13 @@ footer p {
     color: #64748b;
 }
 
+.availability-updated {
+    min-height: 24px;
+    margin: -16px 0 16px;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
 .availability-heading p {
     max-width: 760px;
     font-size: 1.05rem;
