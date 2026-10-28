@@ -54,29 +54,24 @@ Start the PostgreSQL Windows service from the installer, Windows Services, or pg
 
 ## 3. Create the database and load the schema
 
-Open PowerShell and go to the repository root:
-
-```powershell
-cd C:\xampp\htdocs\G-19_P2_WebDevLab
-```
-
 Open **pgAdmin 4**, expand **Servers** in the Browser tree, and enter the PostgreSQL password if prompted. Right-click **Databases** and select **Create** > **Database...**. Set **Database** to `lab_reservation` and **Owner** to `postgres`, then click **Save**.
 
-Return to PowerShell and load the database schema:
+To load the database schema in pgAdmin 4:
 
-```powershell
-psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-```
+1. In the Browser tree, expand **Databases** and right-click `lab_reservation`.
+2. Select **Query Tool**.
+3. In the Query Tool, select **Open File** (or **File** > **Open**) and open:
 
-If `psql` is not in `PATH`, use its full path in the same way, for example:
+   ```text
+   C:\xampp\htdocs\G-19_P2_WebDevLab\database\schema.sql
+   ```
 
-```powershell
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-```
+   If you installed the project in a different folder, use that folder's full path to `database\schema.sql`.
+4. Confirm the Query Tool is connected to `lab_reservation`, then click **Execute/Refresh** (the lightning icon) or press **F5**.
 
 The schema creates the application tables and booking indexes.
 
-For a fresh database, use `schema.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration instead:
+For a fresh database, use `schema.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration to that database instead:
 
 ```powershell
 psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/migrations/20261027_add_booking_group.sql
