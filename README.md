@@ -60,35 +60,23 @@ Open PowerShell and go to the repository root:
 cd C:\xampp\htdocs\G-19_P2_WebDevLab
 ```
 
-Create a database named `lab_reservation`. If PostgreSQL's `bin` directory is in your `PATH`, run:
+Open **pgAdmin 4**, expand **Servers** in the Browser tree, and enter the PostgreSQL password if prompted. Right-click **Databases** and select **Create** > **Database...**. Set **Database** to `lab_reservation` and **Owner** to `postgres`, then click **Save**.
 
-```powershell
-createdb -U postgres lab_reservation
-```
-
-Otherwise, use the installed PostgreSQL version's full executable path. For example, change `16` if your installed PostgreSQL version differs:
-
-```powershell
-& "C:\Program Files\PostgreSQL\16\bin\createdb.exe" -U postgres lab_reservation
-```
-
-Enter the PostgreSQL password if prompted. Then load the schema and sample data:
+Return to PowerShell and load the database schema:
 
 ```powershell
 psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/seed.sql
 ```
 
 If `psql` is not in `PATH`, use its full path in the same way, for example:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/seed.sql
 ```
 
-The schema creates the application tables and booking indexes. The seed adds computers and all 28 half-hour slots, and enables PostgreSQL's `pgcrypto` extension. The database account running the seed must be allowed to create that extension.
+The schema creates the application tables and booking indexes.
 
-For a fresh database, use `schema.sql` and `seed.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration instead:
+For a fresh database, use `schema.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration instead:
 
 ```powershell
 psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/migrations/20261027_add_booking_group.sql
