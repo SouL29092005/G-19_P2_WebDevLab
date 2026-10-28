@@ -28,7 +28,7 @@ Open PowerShell and run the following from the XAMPP `htdocs` directory. Replace
 
 ```powershell
 cd C:\xampp\htdocs
-git clone https://github.com/OWNER/REPOSITORY.git G-19_P2_WebDevLab
+git clone https://github.com/SouL29092005/G-19_P2_WebDevLab.git
 ```
 
 ### Option B: Download a ZIP
