@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Escape database values at output and normalize optional controller data for the management table.
 $escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $users = is_array($users ?? null) ? $users : [];
@@ -25,6 +26,7 @@ $formData = is_array($formData ?? null) ? $formData : ['full_name' => '', 'email
         <div class="alert alert-success" role="status"><?= $escape($success) ?></div>
     <?php endif; ?>
 
+    <!-- Account creation and deletion post distinct action values handled by UserController::index(). -->
     <section class="admin-panel">
         <div class="admin-panel-heading">
             <h3>Add New User</h3>
@@ -131,12 +133,14 @@ $formData = is_array($formData ?? null) ? $formData : ['full_name' => '', 'email
 </section>
 
 <script>
+// Search is a presentation-only table filter; deletion confirmation is not an authorization check.
     window.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('user-search');
         const table = document.getElementById('users-table');
         const noResults = document.getElementById('users-no-results');
 
         if (searchInput && table) {
+            // Match the visible row text so new table columns automatically become searchable.
             searchInput.addEventListener('input', function () {
                 const query = searchInput.value.trim().toLowerCase();
                 let visibleCount = 0;
@@ -150,6 +154,7 @@ $formData = is_array($formData ?? null) ? $formData : ['full_name' => '', 'email
         }
 
         document.querySelectorAll('.delete-user-form').forEach(form => {
+            // The server still enforces role, self-delete, booking-history, and CSRF protections.
             form.addEventListener('submit', function (event) {
                 if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
                     event.preventDefault();

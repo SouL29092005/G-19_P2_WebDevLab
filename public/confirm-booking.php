@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// Only the student who owns the pending group can inspect, confirm, or release it.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -30,6 +31,7 @@ require_once CONFIG_PATH . '/database.php';
 require_once APP_PATH . '/controllers/StudentController.php';
 
 try {
+    // Confirmation and cancellation are state transitions in the controller/repository, not view actions.
     $controller = new StudentController(new BookingRepository($pdo));
     $data = $controller->confirmBooking();
     extract($data, EXTR_SKIP);

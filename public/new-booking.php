@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// The student gate runs before either HTML or JSON availability data can be returned.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -24,6 +25,7 @@ require_once APP_PATH . '/controllers/StudentController.php';
 try {
     $controller = new StudentController(new BookingRepository($pdo));
 
+    // The browser polls this endpoint to refresh available computers without reloading the booking form.
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && ($_GET['ajax'] ?? '') === 'availability') {
         header('Content-Type: application/json; charset=utf-8');
         try {
@@ -35,6 +37,7 @@ try {
         exit;
     }
 
+    // Non-AJAX requests render the full date/slot selection and hold form.
     $data = $controller->newBooking();
 } catch (Throwable $exception) {
     error_log('New booking failed: ' . $exception->getMessage());

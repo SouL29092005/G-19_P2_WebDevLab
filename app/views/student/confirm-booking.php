@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// A hold group is rendered only when the controller has validated all rows as one unexpired group.
 $escape = static fn($value): string => htmlspecialchars(
     (string) $value,
     ENT_QUOTES,
@@ -14,6 +15,7 @@ $firstBooking = $bookingGroup[0] ?? null;
 
 ?>
 
+<!-- The countdown is informational; the server's hold expiry remains authoritative when the user submits. -->
 <section class="student-page">
     <div class="student-page-heading">
         <div>
@@ -97,6 +99,7 @@ $firstBooking = $bookingGroup[0] ?? null;
 
 <?php if ($firstBooking !== null): ?>
     <script>
+        // Decrement the server-provided remaining duration and disable confirmation when the display reaches zero.
         (function () {
             const counter = document.getElementById('hold-countdown');
             let seconds = Number(counter.dataset.seconds || 0);

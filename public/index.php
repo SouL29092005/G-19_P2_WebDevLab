@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// The front controller handles clean routes and starts the shared session before middleware/controllers run.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -17,6 +18,7 @@ if (!is_string($requestPath) || $requestPath === '') {
 }
 
 $basePath = parse_url(APP_BASE_URL, PHP_URL_PATH);
+// Strip an optional deployment subdirectory so routes work with both root and nested virtual hosts.
 if (is_string($basePath) && $basePath !== '' && $basePath !== '/') {
     $basePath = rtrim($basePath, '/');
     if ($requestPath === $basePath || str_starts_with($requestPath, $basePath . '/')) {
@@ -30,6 +32,7 @@ if ($requestPath === '') {
 }
 
 $routes = [
+    // Keep method/path combinations explicit: an unlisted request is a real 404, not a guessed controller action.
     'GET' => [
         '/' => 'home',
         '/login' => 'login',
@@ -56,6 +59,7 @@ if ($route === null) {
     $pageTitle = 'Page Not Found';
 } else {
     try {
+        // Route cases assemble only the dependencies needed by that feature; page rendering is shared below.
         switch ($route) {
             case 'home':
                 $viewFile = APP_PATH . '/views/home.php';
@@ -89,6 +93,7 @@ if ($route === null) {
                 $controller = new ComputerController($repository);
                 $viewData = $controller->index();
 
+                // The availability poll shares validated filters with the HTML page, but returns JSON and exits early.
                 if ($requestMethod === 'GET' && ($_GET['ajax'] ?? null) === 'availability') {
                     header('Content-Type: application/json; charset=utf-8');
                     if ($viewData['errorMessage'] !== null) {
@@ -165,6 +170,7 @@ if ($route === null) {
             http_response_code(200);
         }
     } catch (Throwable $exception) {
+        // Keep details in server logs; the visitor receives a generic error page outside development diagnostics.
         error_log('Application request failed: ' . $exception->getMessage());
         http_response_code(500);
         $pageTitle = 'Internal Server Error';
@@ -174,6 +180,7 @@ if ($route === null) {
 
 require APP_PATH . '/views/layouts/header.php';
 
+// Controller data is exposed to the selected template only after route resolution and error handling complete.
 if ($viewFile !== null) {
     extract($viewData, EXTR_SKIP);
     require $viewFile;

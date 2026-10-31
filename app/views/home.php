@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// The public landing page links to sign-in and public availability; booking actions require an authenticated student.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>

@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 require_once APP_PATH . '/repositories/ComputerRepository.php';
 
+/** Validates the public availability filters and maps them to repository query parameters. */
 final class ComputerController
 {
+    /** Inject persistence so filter validation stays independent from SQL execution. */
     public function __construct(
         private readonly ComputerRepository $computerRepository
     ) {
     }
 
+    /**
+     * Normalize date, slot, and status query parameters before loading availability.
+     * The public page and its JSON poll endpoint share this result, so keep their filter rules aligned here.
+     */
     public function index(): array
     {
         $timezone = new DateTimeZone(APP_TIMEZONE);

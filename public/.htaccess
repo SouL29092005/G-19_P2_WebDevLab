@@ -1,10 +1,10 @@
 
 RewriteEngine On
 
-# Send the admin URL through the front controller,
-# even though public/admin/ is a physical directory.
+# Route /admin through the front controller even though public/admin is a physical asset directory.
 RewriteRule ^admin/?$ index.php [L]
 
+# Let Apache serve real files/directories directly; send every other clean URL to the route table in index.php.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [L]

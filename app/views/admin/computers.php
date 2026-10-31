@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// The controller returns all computers, including inactive entries, and retains submitted fields after errors.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $computers = $computers ?? [];
 
@@ -23,6 +24,7 @@ $computers = $computers ?? [];
         <p class="form-error" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
     <?php endif; ?>
 
+    <!-- The POST form is CSRF-protected; client-side visibility does not replace controller validation. -->
     <section id="add-computer-form" class="add-computer-form" hidden>
         <h3>Add a Laboratory Computer</h3>
         <form method="POST" action="<?= htmlspecialchars($baseUrl . '/admin/computers', ENT_QUOTES, 'UTF-8') ?>">
@@ -80,6 +82,7 @@ $computers = $computers ?? [];
 </section>
 
 <script>
+// Keep the add form's hidden state and accessible expanded state synchronized.
 document.addEventListener('DOMContentLoaded', function () {
     const toggleButton = document.getElementById('toggle-add-computer');
     const cancelButton = document.getElementById('cancel-add-computer');
@@ -93,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Reopen the form when validation failed so the administrator can correct the submitted values.
     toggleButton.addEventListener('click', () => setFormVisible(formSection.hidden));
     cancelButton.addEventListener('click', () => setFormVisible(false));
 

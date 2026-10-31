@@ -1,3 +1,5 @@
+-- Upgrade an existing pre-group schema so multiple slot rows can be held and confirmed as one reservation.
+-- Every operation is idempotent, allowing the migration to be safely re-run after a partial setup attempt.
 alter table bookings
     add column if not exists booking_group_id uuid,
     add column if not exists booking_group_size integer;

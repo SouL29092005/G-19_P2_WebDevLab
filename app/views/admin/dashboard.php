@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Admin navigation is a set of links to independently protected management routes.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>

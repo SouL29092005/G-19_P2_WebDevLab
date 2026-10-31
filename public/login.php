@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// Login, logout, and role-based redirects share one session-aware entry point.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -13,6 +14,7 @@ require_once APP_PATH . '/controllers/AuthController.php';
 
 $controller = new AuthController($pdo);
 
+// Logout is intentionally dispatched before the already-authenticated redirect below.
 if (($_GET['action'] ?? '') === 'logout') {
     $controller->logout();
 }
@@ -28,6 +30,7 @@ if (isset($_SESSION['user']['role'])) {
 }
 
 try {
+    // The controller validates credentials and returns only safe view data on failed login attempts.
     $viewData = $controller->login();
     $pageTitle = $viewData['pageTitle'];
     extract($viewData, EXTR_SKIP);

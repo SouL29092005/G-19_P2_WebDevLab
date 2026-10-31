@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
+/** Encapsulates computer catalog and public availability queries. */
 final class ComputerRepository
 {
+    /** Share the application's configured PDO connection for all computer queries. */
     public function __construct(
         private readonly PDO $pdo
     ) {
     }
 
-
+    /** Return the configured lab slots in chronological order for both filter interfaces. */
     public function getTimeSlots(): array
     {
         $sql = '
@@ -24,7 +26,10 @@ final class ComputerRepository
         return $this->pdo->query($sql)->fetchAll();
     }
 
-
+    /**
+     * Return active computers and their matching slot statuses for one date and optional filters.
+     * A waiting row blocks a slot only until its hold expires; status=all keeps available and occupied rows.
+     */
     public function getAvailabilityForDate(
         string $date,
         array $slotIds,
@@ -96,7 +101,7 @@ final class ComputerRepository
         return $statement->fetchAll();
     }
 
-    
+    /** Include inactive records because administrators need to audit the full computer catalog. */
     public function getAllComputers(): array
     {
         $sql = '
@@ -112,7 +117,7 @@ final class ComputerRepository
 
         return $this->pdo->query($sql)->fetchAll();
     }
-
+    /** Insert one computer; unique-name conflicts are surfaced to the controller for a user-facing message. */
     public function createComputer(
         string $computerName,
         ?string $description

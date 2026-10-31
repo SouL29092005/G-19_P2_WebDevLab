@@ -1,6 +1,7 @@
 (function ($) {
     'use strict';
 
+    // This script enhances only the student booking form; the server remains authoritative for all submitted values.
     if (!$) {
         return;
     }
@@ -25,12 +26,14 @@
     let activeRequest = null;
     let pollTimer = null;
 
+    // Keep slot IDs as strings because they are form values and are sent directly as GET/POST parameters.
     function selectedSlots() {
         return $slotInputs.filter(':checked').map(function () {
             return String($(this).val());
         }).get();
     }
 
+    // Disable slots that have already started today; the controller repeats this check to prevent forged requests.
     function updatePastSlots() {
         const isToday = $date.val() === String($form.data('today-date'));
         const currentTime = String($form.data('current-time'));
@@ -47,6 +50,7 @@
         });
     }
 
+    // Build empty-state copy with text nodes so error/empty messages are never interpreted as HTML.
     function setEmptyMessage(title, detail) {
         $message.empty().append(
             $('<h4>').text(title),
@@ -54,6 +58,7 @@
         ).prop('hidden', false);
     }
 
+    // Rebuild computer choices only when the available ID set changes, preserving a still-valid radio selection.
     function renderComputers(data, slotIds) {
         const computers = data.computers || [];
         const newIds = computers.map(function (c) {
@@ -130,6 +135,7 @@
         $continue.prop('disabled', !selectionStillValid);
     }
 
+    // Fetch availability for the current date/slot set; aborting the previous request prevents stale UI updates.
     function fetchAvailability(isPolling) {
         if (document.hidden && isPolling) {
             return;
@@ -204,6 +210,7 @@
         });
     }
 
+    // Poll frequently while the page is visible so a competing hold disables stale computer choices promptly.
     function startPolling() {
         if (pollTimer !== null) {
             clearInterval(pollTimer);

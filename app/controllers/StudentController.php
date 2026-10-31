@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 require_once APP_PATH . '/repositories/BookingRepository.php';
 
+/**
+ * Coordinates student-facing booking requests and prepares data for student views.
+ * Booking rules belong here; SQL persistence and concurrency checks belong in BookingRepository.
+ */
 final class StudentController
 {
+    /** Inject the repository that owns booking queries and state transitions. */
     public function __construct(
         private readonly BookingRepository $bookings
     ) {}
 
+    /**
+     * Build the dashboard from the student's own bookings, sorted into the next five confirmed sessions.
+     * If dashboard counts or upcoming-booking rules change, update this selection and the repository stats together.
+     */
     public function dashboard(): array
     {
         $userId = (int) $_SESSION['user']['id'];
@@ -38,6 +47,10 @@ final class StudentController
         ];
     }
 
+    /**
+     * Process an owner-scoped cancellation and return the booking list plus flash-message data.
+     * POST actions require the session CSRF token; successful writes use a 303 redirect to prevent resubmission.
+     */
     public function myBookings(): array
     {
         $error = null;
@@ -120,6 +133,10 @@ final class StudentController
         ];
     }
 
+    /**
+     * Validate the date/slot selection, expose matching computers, and create a temporary hold on POST.
+     * The date window and past-slot checks use APP_TIMEZONE; the repository atomically holds every selected slot.
+     */
     public function newBooking(): array
     {
         $error = null;
@@ -252,6 +269,10 @@ final class StudentController
         ];
     }
 
+    /**
+     * Return JSON-ready availability data for the booking-page poller after validating its GET filters.
+     * An empty slot selection intentionally yields no computers rather than treating every slot as selected.
+     */
     public function availability(): array
     {
         $timezone = new DateTimeZone(APP_TIMEZONE);
@@ -311,6 +332,10 @@ final class StudentController
         ];
     }
 
+    /**
+     * Show a user's complete, unexpired hold group or process its confirm/cancel action.
+     * Confirmation is delegated as one repository transaction so partial groups can never be booked.
+     */
     public function confirmBooking(): array
     {
         $error = null;
@@ -380,6 +405,7 @@ final class StudentController
         ];
     }
 
+    /** Keep booking dates inside the inclusive today-through-three-days window in the configured timezone. */
     private function isDateInWindow(
         string $date,
         DateTimeImmutable $today,
@@ -398,6 +424,10 @@ final class StudentController
             && $parsed <= $maxDate;
     }
 
+    /**
+     * Normalize selected slot IDs and reject malformed, unknown, or duplicate values.
+     * Sorting gives the rest of the flow a stable slot order for queries and confirmation displays.
+     */
     private function parseSlotIds($input, array $validSlotIds): array
     {
         if (!is_array($input)) {
@@ -426,6 +456,7 @@ final class StudentController
         return $slotIds;
     }
 
+    /** Accept only the UUID v4 format generated for a temporary booking group. */
     private function isUuid(string $value): bool
     {
         return preg_match(
@@ -434,6 +465,7 @@ final class StudentController
         ) === 1;
     }
 
+    /** Reuse one unpredictable token per session so every student POST form shares the same CSRF check. */
     private function csrfToken(): string
     {
         if (
@@ -446,6 +478,7 @@ final class StudentController
         return $_SESSION['csrf_token'];
     }
 
+    /** Compare submitted and session CSRF values in constant time before any state-changing request. */
     private function validCsrf(): bool
     {
         $submitted = $_POST['csrf_token'] ?? null;

@@ -2,13 +2,19 @@
 
 declare(strict_types=1);
 
+/** Validates administrator computer-creation requests and supplies the management view. */
 final class AdminComputerController
 {
+    /** The repository performs inserts and list queries; this controller owns request validation. */
     public function __construct(
         private readonly ComputerRepository $computerRepository
     ) {
     }
 
+    /**
+     * Handle the add-computer form and return all active/inactive computers for display.
+     * Preserve submitted text on validation errors and redirect after success to avoid duplicate inserts.
+     */
     public function index(): array
     {
         $error = null;

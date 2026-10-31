@@ -2,13 +2,19 @@
 
 declare(strict_types=1);
 
+/** Handles credential verification, session creation, and logout for all account roles. */
 final class AuthController
 {
+    /** Database access is limited to authentication lookups; session state is managed by this controller. */
     public function __construct(
         private readonly PDO $pdo
     ) {
     }
 
+    /**
+     * Validate the login form and establish a fresh session only after password and role checks pass.
+     * The generic credential error avoids revealing whether an email address is registered.
+     */
     public function login(): array
     {
         $email = '';
@@ -78,6 +84,7 @@ final class AuthController
         exit;
     }
 
+    /** Clear session data and its browser cookie before returning the user to the login page. */
     public function logout(): void
     {
         $_SESSION = [];
@@ -104,6 +111,7 @@ final class AuthController
         exit;
     }
 
+    /** Keep the login view's input and error state together with its CSRF token. */
     private function viewData(string $email, ?string $error): array
     {
         return [
@@ -114,6 +122,7 @@ final class AuthController
         ];
     }
 
+    /** Create one cryptographically random form token for the current session when needed. */
     private function getCsrfToken(): string
     {
         if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
@@ -123,6 +132,7 @@ final class AuthController
         return $_SESSION['csrf_token'];
     }
 
+    /** Reject login submissions unless their token matches the token stored in this session. */
     private function isValidCsrfToken(): bool
     {
         $submitted = $_POST['csrf_token'] ?? null;

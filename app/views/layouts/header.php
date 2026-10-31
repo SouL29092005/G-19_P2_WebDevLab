@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Shared document head and role-specific navigation; keep route links consistent with APP_BASE_URL.
 $pageTitle = $pageTitle ?? APP_NAME;
 $baseUrl = rtrim(APP_BASE_URL, '/');
 

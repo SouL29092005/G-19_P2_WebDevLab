@@ -1,5 +1,6 @@
 /* ==========================================================================
    Laboratory Computer Reservation System - Main Stylesheet
+    Shared visual rules for public pages, admin tools, and student booking flows.
    ========================================================================== */
 
 * {
@@ -28,7 +29,7 @@ a:hover {
     text-decoration: underline;
 }
 
-/* --- Layout & Header --- */
+/* --- Layout & Header: shared page frame, navigation, and footer --- */
 
 header.site-header {
     display: flex;
@@ -85,7 +86,7 @@ footer {
     font-size: 0.88rem;
 }
 
-/* --- Buttons --- */
+/* --- Buttons: common actions, disabled states, and admin dashboard links --- */
 
 .button,
 button.button,
@@ -145,7 +146,7 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* --- Alerts, Badges & Statuses --- */
+/* --- Alerts, Badges & Statuses: feedback and booking/account state labels --- */
 
 .alert,
 .form-error,
@@ -239,7 +240,7 @@ button:disabled {
     font-size: 0.88rem;
 }
 
-/* --- Forms & Tables --- */
+/* --- Forms & Tables: shared controls plus horizontally scrollable data tables --- */
 
 .form-group,
 .login-field {
@@ -324,7 +325,7 @@ tbody tr:hover td {
     background-color: #f8fafc;
 }
 
-/* --- Home View --- */
+/* --- Home View: public entry page and feature overview --- */
 
 .home {
     padding: 28px;
@@ -399,7 +400,7 @@ tbody tr:hover td {
     margin-bottom: 12px;
 }
 
-/* --- Login View --- */
+/* --- Login View: account form, password reveal control, and brand panel --- */
 
 .login-page {
     display: flex;
@@ -495,7 +496,7 @@ tbody tr:hover td {
     font-size: 0.9rem;
 }
 
-/* --- Availability Page --- */
+/* --- Availability Page: filters, slot selection, and live computer results --- */
 
 .availability-heading {
     margin-bottom: 20px;
@@ -621,7 +622,7 @@ tbody tr:hover td {
     font-size: 0.85rem;
 }
 
-/* --- Admin Panel --- */
+/* --- Admin Panel: dashboard links, computer management, and user tools --- */
 
 .admin-dashboard,
 .admin-computers,
@@ -687,7 +688,7 @@ tbody tr:hover td {
     width: min(100%, 300px);
 }
 
-/* --- Student Portal --- */
+/* --- Student Portal: dashboard summaries, booking history, and navigation --- */
 
 .student-page {
     display: flex;
@@ -796,7 +797,7 @@ tbody tr:hover td {
     background: #f8fafc;
 }
 
-/* --- New Booking & Confirmation --- */
+/* --- New Booking & Confirmation: multi-slot selection, computer choice, and hold review --- */
 
 .booking-date-form {
     display: flex;
@@ -879,7 +880,7 @@ tbody tr:hover td {
     margin-top: 20px;
 }
 
-/* --- Mobile Responsiveness --- */
+/* --- Mobile Responsiveness: collapse multi-column layouts and stack compact actions --- */
 
 @media (max-width: 768px) {
     header.site-header {

@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+// Normalize controller data and escape every dynamic value before it enters the HTML response.
 $escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $bookings = is_array($bookings ?? null) ? $bookings : [];
 
 ?>
+<!-- Booking history displays every status; cancellation is offered only for future active rows. -->
 <section class="student-page">
     <div class="student-page-heading">
         <div>
@@ -51,6 +53,7 @@ $bookings = is_array($bookings ?? null) ? $bookings : [];
                                 <td><?= $escape(date('d M Y', strtotime($booking['booking_date']))) ?></td>
                                 <td><?= $escape(substr($booking['start_time'], 0, 5)) ?> &ndash; <?= $escape(substr($booking['end_time'], 0, 5)) ?></td>
                                 <td><span class="booking-status status-<?= $escape($booking['status']) ?>"><?= $escape(ucfirst($booking['status'])) ?></span></td>
+                                <!-- The controller revalidates ownership, CSRF, and status; hiding this action is only a UI affordance. -->
                                 <td>
                                     <?php if (in_array($booking['status'], ['booked', 'waiting'], true) && $booking['booking_date'] >= date('Y-m-d')): ?>
                                         <form method="post" onsubmit="return confirm('Cancel this booking?');" action="<?= $escape($baseUrl . '/my-bookings.php') ?>" style="margin:0;">

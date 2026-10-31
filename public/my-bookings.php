@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// Booking history is private and student-only; reject other roles before opening the database connection.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -31,6 +32,7 @@ if ($_SESSION['user']['role'] !== 'student') {
 require_once CONFIG_PATH . '/database.php';
 require_once APP_PATH . '/controllers/StudentController.php';
 
+// Controller owns POST validation and cancellation; this endpoint owns page rendering and request-level errors.
 try {
     $controller = new StudentController(
         new BookingRepository($pdo)

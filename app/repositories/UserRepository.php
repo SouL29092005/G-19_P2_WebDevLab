@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+/** Encapsulates SQL reads and writes for account records. */
 final class UserRepository
 {
+    /** Repositories receive the configured PDO connection from the route bootstrap. */
     public function __construct(
         private readonly PDO $pdo
     ) {
     }
 
+    /** Return account fields safe for the admin table; password hashes are intentionally excluded. */
     public function findAll(): array
     {
         $statement = $this->pdo->query(
@@ -20,6 +23,7 @@ final class UserRepository
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Compare email addresses case-insensitively to match login and database uniqueness behavior. */
     public function emailExists(string $email): bool
     {
         $statement = $this->pdo->prepare(
@@ -34,6 +38,7 @@ final class UserRepository
         return $statement->fetchColumn() !== false;
     }
 
+    /** Insert a validated account; callers must pass an already-hashed password, never plaintext. */
     public function create(
         string $fullName,
         string $email,
@@ -63,6 +68,7 @@ final class UserRepository
         ]);
     }
 
+    /** Load only the fields needed for delete eligibility checks, or null when the account is absent. */
     public function findById(int $userId): ?array
     {
         $statement = $this->pdo->prepare(
@@ -79,6 +85,7 @@ final class UserRepository
         return is_array($user) ? $user : null;
     }
 
+    /** Preserve reservation history by preventing deletion once any booking row references this user. */
     public function hasBookings(int $userId): bool
     {
         $statement = $this->pdo->prepare(
@@ -93,6 +100,7 @@ final class UserRepository
         return $statement->fetchColumn() !== false;
     }
 
+    /** Repeat the no-bookings predicate atomically so a concurrent booking cannot be orphaned by deletion. */
     public function deleteIfEligible(int $userId): bool
     {
         $statement = $this->pdo->prepare(

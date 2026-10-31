@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+/** Owns booking SQL, hold lifecycle transitions, and concurrency-safe reservation writes. */
 final class BookingRepository
 {
+    /** Use the shared PostgreSQL connection so each operation follows the configured transaction policy. */
     public function __construct(
         private readonly PDO $pdo
     ) {}
 
+    /** Return a student's full booking history with the computer and slot labels required by their views. */
     public function getStudentBookings(int $userId): array
     {
         $statement = $this->pdo->prepare('
@@ -25,6 +28,7 @@ final class BookingRepository
         return $statement->fetchAll();
     }
 
+    /** List bookable computers only; inactive machines must never be offered to students. */
     public function getActiveComputers(): array
     {
         return $this->pdo->query('
@@ -35,6 +39,7 @@ final class BookingRepository
         ')->fetchAll();
     }
 
+    /** Return canonical slot IDs/times used to validate all submitted slot selections. */
     public function getTimeSlots(): array
     {
         return $this->pdo->query('
@@ -44,6 +49,10 @@ final class BookingRepository
         ')->fetchAll();
     }
 
+    /**
+     * Find computers free for every unique requested slot on the date, excluding expired-time slots today.
+     * The HAVING count must equal the requested count; removing it would allow partial multi-slot matches.
+     */
     public function getAvailableComputersAcrossSlots(
         string $date,
         string $today,
@@ -106,6 +115,10 @@ final class BookingRepository
         return $statement->fetchAll();
     }
 
+    /**
+     * Atomically expire stale conflicting holds and insert a complete two-minute waiting group.
+     * Return false on any availability race so callers never proceed with a partial group; unexpected SQL errors bubble up.
+     */
     public function createHoldGroup(
         int $userId,
         string $date,
@@ -253,6 +266,10 @@ final class BookingRepository
         }
     }
 
+    /**
+     * Load only this student's unexpired pending rows and verify group size and shared booking metadata.
+     * Corrupt, expired, or incomplete groups are released as a unit and presented as unavailable.
+     */
     public function getWaitingBookingGroup(int $userId, string $groupId): array
     {
         $statement = $this->pdo->prepare('
@@ -304,6 +321,10 @@ final class BookingRepository
         return $rows;
     }
 
+    /**
+     * Lock and validate every row in the hold group, then confirm all rows in one transaction.
+     * Row count must match the declared group size or the transaction is rolled back.
+     */
     public function confirmBookingGroup(int $userId, string $groupId): bool
     {
         $this->pdo->beginTransaction();
@@ -389,6 +410,7 @@ final class BookingRepository
         }
     }
 
+    /** Release every still-waiting row in a group, scoped to its owner so another user's hold is untouched. */
     public function releaseWaitingBookingGroup(int $userId, string $groupId): bool
     {
         $statement = $this->pdo->prepare('
@@ -408,6 +430,7 @@ final class BookingRepository
         return $statement->rowCount() > 0;
     }
 
+    /** Return a complete confirmed group for the success message, never a partial set of rows. */
     public function getConfirmedBookingGroup(int $userId, string $groupId): array
     {
         $statement = $this->pdo->prepare('
@@ -437,6 +460,10 @@ final class BookingRepository
         return $rows;
     }
 
+    /**
+     * Return free computer/slot combinations for the public availability page and optional slot filter.
+     * Active, unexpired holds and confirmed bookings both count as occupied.
+     */
     public function getAvailableCombinations(
         string $date,
         string $today,
@@ -510,6 +537,10 @@ final class BookingRepository
         return $statement->fetchAll();
     }
 
+    /**
+     * Cancel a booking owned by the student; cancelling one pending row releases its entire hold group.
+     * Confirmed bookings are cancelled individually, and unrelated users' rows are excluded in the SQL.
+     */
     public function cancelBooking(
         int $userId,
         int $bookingId
@@ -555,6 +586,7 @@ final class BookingRepository
         return $statement->rowCount() === 1;
     }
 
+    /** Aggregate the student's upcoming, confirmed, and cancelled booking counts for the dashboard. */
     public function getStudentStats(int $userId): array
     {
         $statement = $this->pdo->prepare('
@@ -582,6 +614,7 @@ final class BookingRepository
         ];
     }
 
+    /** Return joined booking records for the admin audit table, including all statuses. */
     public function getAllBookings(): array
     {
         return $this->pdo->query('

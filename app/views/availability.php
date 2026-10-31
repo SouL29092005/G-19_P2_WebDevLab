@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+// Filter values and initial result rows are supplied by ComputerController for both the page and polling endpoint.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>
+<!-- This public view shows availability without account data; JavaScript refreshes the same validated filters. -->
 <section class="availability-page">
     <div class="availability-heading">
         <h2>Computer Availability</h2>
@@ -59,6 +61,7 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
 
     <p id="availability-updated" class="availability-updated" role="status">Availability refreshes automatically every 5 seconds.</p>
 
+    <!-- Server-render the first result set so the page remains useful before JavaScript finishes loading. -->
     <div id="availability-results">
         <?php if ($availability === []): ?>
             <p class="empty-state">No computers match the selected filters.</p>

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Rows are supplied by the admin-only route and include all booking statuses for audit purposes.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>

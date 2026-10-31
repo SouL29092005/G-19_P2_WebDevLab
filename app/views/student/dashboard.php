@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+// Dashboard values are optional-safe so the page can render if a controller omits an empty collection.
 $escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $stats = is_array($stats ?? null) ? $stats : [];
 $upcomingBookings = is_array($upcomingBookings ?? null) ? $upcomingBookings : [];
 
 ?>
+<!-- Summary counts and upcoming rows are separate: only confirmed sessions appear in the short list. -->
 <section class="student-page">
     <div class="student-page-heading">
         <div>

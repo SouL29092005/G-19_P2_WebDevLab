@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+// Start the configured session before checking the student's role.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -31,6 +32,7 @@ if ($_SESSION['user']['role'] !== 'student') {
 require_once CONFIG_PATH . '/database.php';
 require_once APP_PATH . '/controllers/StudentController.php';
 
+// The direct PHP endpoint adapts the shared controller data to the student dashboard template.
 try {
     $controller = new StudentController(
         new BookingRepository($pdo)

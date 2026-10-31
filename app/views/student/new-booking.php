@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Build lookup data once so selected slots, past-slot styling, and labels use the same controller result.
 $escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $availableComputers = is_array($availableComputers ?? null) ? $availableComputers : [];
@@ -19,6 +20,7 @@ foreach ($timeSlots as $slot) {
 }
 
 ?>
+<!-- The GET form drives discovery; the separate POST form submits the selected date, slots, and computer for a hold. -->
 <section class="student-page">
     <div class="student-page-heading">
         <div>
@@ -38,6 +40,7 @@ foreach ($timeSlots as $slot) {
     <?php endif; ?>
 
     <section class="student-panel booking-form-panel">
+        <!-- Data attributes initialize client-side past-slot checks; the controller repeats all checks on submission. -->
         <form method="get" action="<?= $escape($baseUrl . '/new-booking.php') ?>" class="booking-date-form multi-slot-form" id="availability-form" data-endpoint="<?= $escape($baseUrl . '/new-booking.php') ?>" data-today-date="<?= $escape($bookingToday) ?>" data-current-time="<?= $escape($bookingNow) ?>">
             <div class="form-group">
                 <label for="booking-date">Booking date</label>
@@ -106,6 +109,7 @@ foreach ($timeSlots as $slot) {
                 <?php endif; ?>
             </div>
 
+            <!-- Selected radio and hidden slot inputs are the payload consumed by StudentController::newBooking(). -->
             <form method="post" action="<?= $escape($baseUrl . '/new-booking.php') ?>" id="hold-form" class="new-booking-form">
                 <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                 <input type="hidden" name="action" value="hold">

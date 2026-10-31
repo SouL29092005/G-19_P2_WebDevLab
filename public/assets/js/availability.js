@@ -1,6 +1,7 @@
 (function ($) {
     'use strict';
 
+    // Progressive enhancement for the public availability page; server-rendered results remain the initial fallback.
     if (!$) {
         return;
     }
@@ -18,6 +19,7 @@
     let requestVersion = 0;
     let changeTimer = null;
 
+    // Group the server's computer/slot rows into the card structure expected by the availability view.
     function renderAvailability(rows) {
         if (!Array.isArray(rows) || rows.length === 0) {
             $results.empty().append(
@@ -72,6 +74,7 @@
         $results.empty().append($computerList);
     }
 
+    // Refresh the current filters and ignore older responses so slower requests cannot overwrite newer selections.
     function refreshAvailability() {
         if (document.hidden) {
             return;
@@ -137,6 +140,7 @@
     });
 
     $form.on('change', 'input, select', function () {
+        // Debounce rapid filter changes to avoid issuing one request for every checkbox interaction.
         window.clearTimeout(changeTimer);
         changeTimer = window.setTimeout(refreshAvailability, 200);
     });
@@ -148,5 +152,6 @@
     });
 
     refreshAvailability();
+    // Keep the public view current while open; hidden tabs are skipped by refreshAvailability().
     window.setInterval(refreshAvailability, 5000);
 })(window.jQuery);

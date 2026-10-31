@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Failed login values and errors come from AuthController; the password is never repopulated into the form.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>
@@ -48,6 +49,7 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
 </section>
 
 <script>
+// Reveal/hide only changes the input type in this browser; authentication is always performed server-side.
     const passwordInput = document.getElementById('password');
     const passwordToggle = document.getElementById('password-toggle');
 

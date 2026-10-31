@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Credentials stay in the ignored config/.env file; this bootstrap is the single PDO construction point.
 $envPath = __DIR__ . '/.env';
 
 if (!is_file($envPath)) {
@@ -26,6 +27,7 @@ if ($dbname === '' || $username === '') {
 
 $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
 
+// Exceptions and native prepared statements make database failures explicit and parameter binding predictable.
 try {
     $pdo = new PDO($dsn, $username, $password, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

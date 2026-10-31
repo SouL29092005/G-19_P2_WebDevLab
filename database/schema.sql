@@ -1,5 +1,5 @@
 
--- 1. USERS
+-- Users hold login identity and role; password_hash must contain a password_hash() result, never plaintext.
 
 create table users (
     user_id bigint generated always as identity primary key,
@@ -12,7 +12,7 @@ create table users (
 );
 
 
--- 2. COMPUTERS
+-- Computers may be deactivated without deleting historical booking references.
 
 create table computers (
     computer_id bigint generated always as identity primary key,
@@ -22,8 +22,7 @@ create table computers (
 );
 
 
--- 3. TIME SLOTS
--- Stores the 28 fixed 30-minute slots from 08:00 to 22:00.
+-- Stores the fixed lab schedule. Seed data creates 28 consecutive 30-minute slots from 08:00 through 22:00.
 
 create table time_slots (
     slot_id integer generated always as identity primary key,
@@ -41,7 +40,7 @@ create table time_slots (
 );
 
 
--- 4. BOOKINGS
+-- Each row represents one computer/date/slot; multi-slot reservations share booking_group_id and group_size.
 
 create table bookings (
     booking_id bigint generated always as identity primary key,
@@ -106,7 +105,7 @@ create table bookings (
 );
 
 
--- 5. BOOKING LOOKUP INDEXES
+-- Lookup indexes support student history, date/slot availability, expiry cleanup, and group validation.
 
 create index idx_bookings_date_slot
     on bookings (booking_date, slot_id);
@@ -127,7 +126,8 @@ create unique index uq_booking_group_slot
     where booking_group_id is not null;
 
 
--- 6. PREVENT CONFLICTING RESERVATIONS
+-- Partial uniqueness makes waiting and booked rows mutually exclusive for a computer/date/slot.
+-- Cancelled rows leave the active index, allowing that slot to be reserved again.
 
 create unique index uq_active_computer_slot_booking
     on bookings (booking_date, computer_id, slot_id)

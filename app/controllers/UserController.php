@@ -2,13 +2,19 @@
 
 declare(strict_types=1);
 
+/** Coordinates administrator user listing, account creation, and protected student deletion. */
 final class UserController
 {
+    /** Inject user persistence; role and booking-history safeguards are enforced before deletion. */
     public function __construct(
         private readonly UserRepository $repository
     ) {
     }
 
+    /**
+     * Dispatch the CSRF-protected admin form action, then return fresh table and form state.
+     * Do not remove the self/admin/history guards in the action methods: they protect account and audit integrity.
+     */
     public function index(): array
     {
         $error = null;
@@ -59,6 +65,10 @@ final class UserController
         ];
     }
 
+    /**
+     * Validate user fields, hash the password, and create an account with an allowed role.
+     * The repository/database uniqueness constraint remains the final defense against duplicate email races.
+     */
     private function createUser(): array
     {
         $fullNameInput = $_POST['full_name'] ?? '';
@@ -177,6 +187,10 @@ final class UserController
         }
     }
 
+    /**
+     * Delete only an eligible non-admin account that is not the current administrator and has no bookings.
+     * The repository repeats the no-bookings condition in the DELETE to close the validation/write race.
+     */
     private function deleteUser(): array
     {
         $userIdInput = $_POST['user_id'] ?? '';
@@ -249,6 +263,7 @@ final class UserController
         }
     }
 
+    /** Issue a reusable session-scoped token for the administrator forms. */
     private function getCsrfToken(): string
     {
         if (
@@ -261,6 +276,7 @@ final class UserController
         return $_SESSION['csrf_token'];
     }
 
+    /** Compare submitted and stored form tokens before dispatching any user-management action. */
     private function isValidCsrfToken(): bool
     {
         $submitted = $_POST['csrf_token'] ?? null;

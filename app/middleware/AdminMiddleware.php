@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+/** Blocks admin routes unless the session belongs to an authenticated administrator. */
 final class AdminMiddleware
 {
+    /** Redirect anonymous visitors to login; return a 403 page for authenticated non-admin users. */
     public static function handle(): void
     {
         $user = $_SESSION['user'] ?? null;
