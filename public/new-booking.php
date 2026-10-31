@@ -9,20 +9,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (!isset($_SESSION['user']['role'])) {
-    header(
-        'Location: ' . rtrim(APP_BASE_URL, '/') . '/login.php',
-        true,
-        303
-    );
+    header('Location: ' . rtrim(APP_BASE_URL, '/') . '/login.php', true, 303);
     exit;
 }
 
 if ($_SESSION['user']['role'] !== 'student') {
-    header(
-        'Location: ' . rtrim(APP_BASE_URL, '/') . '/admin/',
-        true,
-        303
-    );
+    header('Location: ' . rtrim(APP_BASE_URL, '/') . '/admin/', true, 303);
     exit;
 }
 
@@ -32,25 +24,14 @@ require_once APP_PATH . '/controllers/StudentController.php';
 try {
     $controller = new StudentController(new BookingRepository($pdo));
 
-    if (
-        ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
-        && ($_GET['ajax'] ?? '') === 'availability'
-    ) {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && ($_GET['ajax'] ?? '') === 'availability') {
         header('Content-Type: application/json; charset=utf-8');
-
         try {
-            echo json_encode(
-                $controller->availability(),
-                JSON_THROW_ON_ERROR
-            );
+            echo json_encode($controller->availability(), JSON_THROW_ON_ERROR);
         } catch (InvalidArgumentException $exception) {
             http_response_code(422);
-            echo json_encode(
-                ['error' => $exception->getMessage()],
-                JSON_THROW_ON_ERROR
-            );
+            echo json_encode(['error' => $exception->getMessage()], JSON_THROW_ON_ERROR);
         }
-
         exit;
     }
 
@@ -67,10 +48,7 @@ try {
         'selectedSlotIds' => [],
         'availableComputers' => [],
         'csrfToken' => '',
-        'error' => APP_DEBUG
-            ? 'Booking error: ' . $exception->getMessage()
-            : 'Booking is unavailable right now. Please try again later.',
-        'success' => null,
+        'error' => APP_DEBUG ? $exception->getMessage() : 'Unable to load booking page.',
     ];
 }
 

@@ -2,20 +2,11 @@
 
 declare(strict_types=1);
 
-$escape = static fn($value): string => htmlspecialchars(
-    (string) $value,
-    ENT_QUOTES,
-    'UTF-8'
-);
-
+$escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
-$availableComputers = is_array($availableComputers ?? null)
-    ? $availableComputers
-    : [];
+$availableComputers = is_array($availableComputers ?? null) ? $availableComputers : [];
 $timeSlots = is_array($timeSlots ?? null) ? $timeSlots : [];
-$selectedSlotIds = is_array($selectedSlotIds ?? null)
-    ? $selectedSlotIds
-    : [];
+$selectedSlotIds = is_array($selectedSlotIds ?? null) ? $selectedSlotIds : [];
 $selectedLookup = array_fill_keys($selectedSlotIds, true);
 $bookingToday = (new DateTimeImmutable('today', new DateTimeZone(APP_TIMEZONE)))->format('Y-m-d');
 $bookingNow = (new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE)))->format('H:i:s');
@@ -23,14 +14,11 @@ $selectedLabels = [];
 
 foreach ($timeSlots as $slot) {
     if (isset($selectedLookup[(int) $slot['slot_id']])) {
-        $selectedLabels[] = substr((string) $slot['start_time'], 0, 5)
-            . '–'
-            . substr((string) $slot['end_time'], 0, 5);
+        $selectedLabels[] = substr((string) $slot['start_time'], 0, 5) . '–' . substr((string) $slot['end_time'], 0, 5);
     }
 }
 
 ?>
-
 <section class="student-page">
     <div class="student-page-heading">
         <div>
@@ -38,55 +26,32 @@ foreach ($timeSlots as $slot) {
             <h2>New Booking</h2>
             <p>Select one computer that is free for every selected slot.</p>
         </div>
-
-        <a class="button button-secondary" href="<?= $escape($baseUrl . '/my-bookings.php') ?>">
-            My Bookings
-        </a>
+        <a class="button button-secondary" href="<?= $escape($baseUrl . '/my-bookings.php') ?>">My Bookings</a>
     </div>
 
     <?php if (!empty($error)): ?>
-        <div class="alert alert-error" role="alert">
-            <?= $escape($error) ?>
-        </div>
+        <div class="alert alert-error" role="alert"><?= $escape($error) ?></div>
     <?php endif; ?>
 
     <?php if (!empty($success)): ?>
-        <div class="alert alert-success" role="status">
-            <?= $escape($success) ?>
-        </div>
+        <div class="alert alert-success" role="status"><?= $escape($success) ?></div>
     <?php endif; ?>
 
     <section class="student-panel booking-form-panel">
-        <form
-            method="get"
-            action="<?= $escape($baseUrl . '/new-booking.php') ?>"
-            class="booking-date-form multi-slot-form"
-            id="availability-form"
-            data-endpoint="<?= $escape($baseUrl . '/new-booking.php') ?>"
-            data-today-date="<?= $escape($bookingToday) ?>"
-            data-current-time="<?= $escape($bookingNow) ?>"
-        >
+        <form method="get" action="<?= $escape($baseUrl . '/new-booking.php') ?>" class="booking-date-form multi-slot-form" id="availability-form" data-endpoint="<?= $escape($baseUrl . '/new-booking.php') ?>" data-today-date="<?= $escape($bookingToday) ?>" data-current-time="<?= $escape($bookingNow) ?>">
             <div class="form-group">
                 <label for="booking-date">Booking date</label>
-                <input
-                    type="date"
-                    id="booking-date"
-                    name="date"
-                    value="<?= $escape($selectedDate) ?>"
-                    min="<?= $escape($minDate) ?>"
-                    max="<?= $escape($maxDate) ?>"
-                    required
-                >
+                <input type="date" id="booking-date" name="date" value="<?= $escape($selectedDate) ?>" min="<?= $escape($minDate) ?>" max="<?= $escape($maxDate) ?>" required>
             </div>
 
             <fieldset class="time-slot-picker">
-                <legend>Choose time slots</legend>
-                <p class="field-hint">Select one or more 30-minute slots. Lab hours are 8:00 AM–10:00 PM.</p>
+                <legend style="font-weight:600;margin-bottom:6px;">Choose time slots</legend>
+                <p class="field-hint" style="margin-bottom:8px;">Select one or more 30-minute slots. Lab hours are 8:00 AM–10:00 PM.</p>
 
                 <details class="time-slot-dropdown" id="booking-slot-dropdown">
                     <summary class="time-slot-dropdown-summary">
                         <span id="booking-slot-summary"><?= count($selectedSlotIds) === 0 ? 'Choose time slots' : count($selectedSlotIds) . ' time slot' . (count($selectedSlotIds) === 1 ? '' : 's') . ' selected' ?></span>
-                        <span aria-hidden="true">⌄</span>
+                        <span aria-hidden="true">&or;</span>
                     </summary>
                     <div class="time-slot-menu time-slot-options">
                     <?php foreach ($timeSlots as $slot): ?>
@@ -94,18 +59,10 @@ foreach ($timeSlots as $slot) {
                         $slotId = (int) $slot['slot_id'];
                         $start = substr((string) $slot['start_time'], 0, 5);
                         $end = substr((string) $slot['end_time'], 0, 5);
-                        $past = $selectedDate === $bookingToday
-                            && (string) $slot['start_time'] <= $bookingNow;
+                        $past = $selectedDate === $bookingToday && (string) $slot['start_time'] <= $bookingNow;
                         ?>
                         <label class="time-slot-option<?= isset($selectedLookup[$slotId]) ? ' is-selected' : '' ?><?= $past ? ' is-past' : '' ?>">
-                            <input
-                                type="checkbox"
-                                name="slots[]"
-                                value="<?= $slotId ?>"
-                                data-start-time="<?= $escape((string) $slot['start_time']) ?>"
-                                <?= isset($selectedLookup[$slotId]) ? 'checked' : '' ?>
-                                <?= $past ? 'disabled' : '' ?>
-                            >
+                            <input type="checkbox" name="slots[]" value="<?= $slotId ?>" data-start-time="<?= $escape((string) $slot['start_time']) ?>" <?= isset($selectedLookup[$slotId]) ? 'checked' : '' ?> <?= $past ? 'disabled' : '' ?>>
                             <span><?= $escape($start) ?>–<?= $escape($end) ?></span>
                         </label>
                     <?php endforeach; ?>
@@ -118,21 +75,18 @@ foreach ($timeSlots as $slot) {
                 <span>time slots selected</span>
             </div>
 
-            <button type="submit" class="button button-secondary">
-                Find computers
-            </button>
+            <button type="submit" class="button button-secondary">Find computers</button>
         </form>
 
         <div class="booking-rules">
-            <strong>Booking window:</strong> today through the next 3 days.
-            Your selected slots are held together for 2 minutes after you continue.
+            <strong>Booking window:</strong> today through the next 3 days. Your selected slots are held together for 2 minutes after you continue.
         </div>
 
         <section class="availability-results" aria-live="polite">
             <div class="student-panel-heading">
                 <div>
                     <h3>Computers available for all selected slots</h3>
-                    <p id="availability-summary">
+                    <p id="availability-summary" class="muted-text">
                         <?php if ($selectedSlotIds === []): ?>
                             Select one or more slots to see matching computers.
                         <?php else: ?>
@@ -152,12 +106,7 @@ foreach ($timeSlots as $slot) {
                 <?php endif; ?>
             </div>
 
-            <form
-                method="post"
-                action="<?= $escape($baseUrl . '/new-booking.php') ?>"
-                id="hold-form"
-                class="new-booking-form"
-            >
+            <form method="post" action="<?= $escape($baseUrl . '/new-booking.php') ?>" id="hold-form" class="new-booking-form">
                 <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                 <input type="hidden" name="action" value="hold">
                 <input type="hidden" name="booking_date" id="hold-date" value="<?= $escape($selectedDate) ?>">
@@ -182,22 +131,17 @@ foreach ($timeSlots as $slot) {
                     <?php endforeach; ?>
                 </div>
 
-                <button
-                    type="submit"
-                    id="continue-booking"
-                    class="button button-primary"
-                    <?= $availableComputers === [] ? 'disabled' : '' ?>
-                >
-                    Continue to Confirmation
-                </button>
+                <div style="margin-top:16px;">
+                    <button type="submit" id="continue-booking" class="button button-primary" <?= $availableComputers === [] ? 'disabled' : '' ?>>Continue to Confirmation</button>
+                </div>
             </form>
         </section>
     </section>
 
     <p class="student-back-link">
-        <a href="<?= $escape($baseUrl . '/dashboard.php') ?>">← Back to dashboard</a>
+        <a href="<?= $escape($baseUrl . '/dashboard.php') ?>">&larr; Back to dashboard</a>
     </p>
 </section>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="<?= $escape($baseUrl . '/assets/js/new-booking.js') ?>" defer></script>
+<script src="<?= $escape($baseUrl . '/assets/js/new-booking.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/new-booking.js')) ?>"></script>

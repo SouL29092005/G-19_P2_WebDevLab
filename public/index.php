@@ -10,7 +10,6 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-
 $requestPath = parse_url($requestUri, PHP_URL_PATH);
 
 if (!is_string($requestPath) || $requestPath === '') {
@@ -18,24 +17,14 @@ if (!is_string($requestPath) || $requestPath === '') {
 }
 
 $basePath = parse_url(APP_BASE_URL, PHP_URL_PATH);
-
 if (is_string($basePath) && $basePath !== '' && $basePath !== '/') {
     $basePath = rtrim($basePath, '/');
-
-    if (
-        $requestPath === $basePath
-        || str_starts_with($requestPath, $basePath . '/')
-    ) {
+    if ($requestPath === $basePath || str_starts_with($requestPath, $basePath . '/')) {
         $requestPath = substr($requestPath, strlen($basePath));
     }
 }
 
 $requestPath = '/' . trim($requestPath, '/');
-
-error_log('Request path: ' . $requestPath);
-error_log('Request URI: ' . $requestUri);
-error_log('App base URL: ' . APP_BASE_URL);
-
 if ($requestPath === '') {
     $requestPath = '/';
 }
@@ -56,12 +45,7 @@ $routes = [
     ],
 ];
 
-error_log('DEBUG method: ' . $requestMethod);
-error_log('DEBUG path: ' . $requestPath);
-error_log('DEBUG URI: ' . $requestUri);
-
 $route = $routes[$requestMethod][$requestPath] ?? null;
-
 $viewFile = null;
 $viewData = [];
 $pageTitle = APP_NAME;
@@ -82,14 +66,12 @@ if ($route === null) {
                     $destination = $role === 'admin'
                         ? rtrim(APP_BASE_URL, '/') . '/admin/'
                         : rtrim(APP_BASE_URL, '/') . '/dashboard.php';
-
                     header('Location: ' . $destination, true, 303);
                     exit;
                 }
 
                 require_once CONFIG_PATH . '/database.php';
-                require_once APP_PATH
-                    . '/controllers/AuthController.php';
+                require_once APP_PATH . '/controllers/AuthController.php';
 
                 $authController = new AuthController($pdo);
                 $viewData = $authController->login();
@@ -99,41 +81,25 @@ if ($route === null) {
 
             case 'availability':
                 require_once CONFIG_PATH . '/database.php';
-
-                require_once APP_PATH
-                    . '/repositories/ComputerRepository.php';
-
-                require_once APP_PATH
-                    . '/controllers/ComputerController.php';
+                require_once APP_PATH . '/repositories/ComputerRepository.php';
+                require_once APP_PATH . '/controllers/ComputerController.php';
 
                 $repository = new ComputerRepository($pdo);
                 $controller = new ComputerController($repository);
-
                 $viewData = $controller->index();
 
-                if (
-                    $requestMethod === 'GET'
-                    && ($_GET['ajax'] ?? null) === 'availability'
-                ) {
+                if ($requestMethod === 'GET' && ($_GET['ajax'] ?? null) === 'availability') {
                     header('Content-Type: application/json; charset=utf-8');
-
                     if ($viewData['errorMessage'] !== null) {
                         http_response_code(422);
-                        echo json_encode([
-                            'success' => false,
-                            'error' => $viewData['errorMessage'],
-                        ], JSON_THROW_ON_ERROR);
+                        echo json_encode(['success' => false, 'error' => $viewData['errorMessage']], JSON_THROW_ON_ERROR);
                     } else {
                         echo json_encode([
                             'success' => true,
                             'availability' => $viewData['availability'],
-                            'updated_at' => (new DateTimeImmutable(
-                                'now',
-                                new DateTimeZone(APP_TIMEZONE)
-                            ))->format(DATE_ATOM),
+                            'updated_at' => (new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE)))->format(DATE_ATOM),
                         ], JSON_THROW_ON_ERROR);
                     }
-
                     exit;
                 }
 
@@ -142,61 +108,39 @@ if ($route === null) {
                 break;
 
             case 'admin':
-                require_once APP_PATH
-                    . '/middleware/AdminMiddleware.php';
-
+                require_once APP_PATH . '/middleware/AdminMiddleware.php';
                 AdminMiddleware::handle();
                 $pageTitle = 'Admin Dashboard';
                 $viewFile = APP_PATH . '/views/admin/dashboard.php';
-                $viewData = [
-                    'pageTitle' => $pageTitle,
-                ];
+                $viewData = ['pageTitle' => $pageTitle];
                 break;
 
             case 'admin_computers':
-                require_once APP_PATH
-                    . '/middleware/AdminMiddleware.php';
-
+                require_once APP_PATH . '/middleware/AdminMiddleware.php';
                 AdminMiddleware::handle();
-
                 require_once CONFIG_PATH . '/database.php';
-
-                require_once APP_PATH
-                    . '/repositories/ComputerRepository.php';
-
-                require_once APP_PATH
-                    . '/controllers/AdminComputerController.php';
+                require_once APP_PATH . '/repositories/ComputerRepository.php';
+                require_once APP_PATH . '/controllers/AdminComputerController.php';
 
                 $repository = new ComputerRepository($pdo);
                 $controller = new AdminComputerController($repository);
-
                 $viewData = $controller->index();
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/admin/computers.php';
-
                 break;
-                
+
             case 'admin_users':
-                require_once APP_PATH
-                    . '/middleware/AdminMiddleware.php';
-
+                require_once APP_PATH . '/middleware/AdminMiddleware.php';
                 AdminMiddleware::handle();
-
                 require_once CONFIG_PATH . '/database.php';
-
-                require_once APP_PATH
-                    . '/repositories/UserRepository.php';
-
-                require_once APP_PATH
-                    . '/controllers/UserController.php';
+                require_once APP_PATH . '/repositories/UserRepository.php';
+                require_once APP_PATH . '/controllers/UserController.php';
 
                 $repository = new UserRepository($pdo);
                 $controller = new UserController($repository);
-
                 $viewData = $controller->index();
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/admin/users.php';
-
                 break;
         }
 
@@ -208,10 +152,7 @@ if ($route === null) {
             http_response_code(200);
         }
     } catch (Throwable $exception) {
-        error_log(
-            'Application request failed: ' . $exception->getMessage()
-        );
-
+        error_log('Application request failed: ' . $exception->getMessage());
         http_response_code(500);
         $pageTitle = 'Internal Server Error';
         $viewFile = null;
@@ -228,11 +169,7 @@ if ($viewFile !== null) {
     <section class="error-page">
         <h2>404 - Page Not Found</h2>
         <p>The requested page does not exist yet.</p>
-        <a href="<?= htmlspecialchars(
-            rtrim(APP_BASE_URL, '/') . '/',
-            ENT_QUOTES,
-            'UTF-8'
-        ) ?>">Return to Home</a>
+        <a href="<?= htmlspecialchars(rtrim(APP_BASE_URL, '/') . '/', ENT_QUOTES, 'UTF-8') ?>">Return to Home</a>
     </section>
     <?php
 } else {
