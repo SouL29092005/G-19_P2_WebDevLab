@@ -20,6 +20,11 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
                 <h3>Manage Users</h3>
                 <p>View, create, and manage user accounts.</p>
             </a>
+
+            <a href="<?= htmlspecialchars($baseUrl . '/admin/bookings', ENT_QUOTES, 'UTF-8') ?>" class="admin-action-card">
+                <h3>Show Bookings</h3>
+                <p>View all student booking records and their statuses.</p>
+            </a>
         </div>
     </nav>
 </section>

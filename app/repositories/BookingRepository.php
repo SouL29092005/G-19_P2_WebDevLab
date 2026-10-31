@@ -581,4 +581,19 @@ final class BookingRepository
             'cancelled' => 0,
         ];
     }
+
+    public function getAllBookings(): array
+    {
+        return $this->pdo->query('
+            select b.booking_id, u.full_name, u.email,
+                   c.computer_name, b.booking_date,
+                   ts.start_time, ts.end_time,
+                   b.status, b.created_at
+            from bookings b
+            join users u on u.user_id = b.user_id
+            join computers c on c.computer_id = b.computer_id
+            join time_slots ts on ts.slot_id = b.slot_id
+            order by b.booking_date desc, ts.start_time desc, b.created_at desc
+        ')->fetchAll();
+    }
 }

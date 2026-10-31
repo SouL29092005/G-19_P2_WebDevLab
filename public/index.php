@@ -37,6 +37,7 @@ $routes = [
         '/admin' => 'admin',
         '/admin/computers' => 'admin_computers',
         '/admin/users' => 'admin_users',
+        '/admin/bookings' => 'admin_bookings',
     ],
     'POST' => [
         '/login' => 'login',
@@ -141,6 +142,18 @@ if ($route === null) {
                 $viewData = $controller->index();
                 $pageTitle = $viewData['pageTitle'];
                 $viewFile = APP_PATH . '/views/admin/users.php';
+                break;
+
+            case 'admin_bookings':
+                require_once APP_PATH . '/middleware/AdminMiddleware.php';
+                AdminMiddleware::handle();
+                require_once CONFIG_PATH . '/database.php';
+                require_once APP_PATH . '/repositories/BookingRepository.php';
+
+                $allBookings = (new BookingRepository($pdo))->getAllBookings();
+                $pageTitle = 'All Bookings';
+                $viewData = ['pageTitle' => $pageTitle, 'bookings' => $allBookings];
+                $viewFile = APP_PATH . '/views/admin/bookings.php';
                 break;
         }
 
