@@ -28,7 +28,7 @@ Open PowerShell and run the following from the XAMPP `htdocs` directory. Replace
 
 ```powershell
 cd C:\xampp\htdocs
-git clone https://github.com/OWNER/REPOSITORY.git G-19_P2_WebDevLab
+git clone https://github.com/SouL29092005/G-19_P2_WebDevLab.git
 ```
 
 ### Option B: Download a ZIP
@@ -54,41 +54,24 @@ Start the PostgreSQL Windows service from the installer, Windows Services, or pg
 
 ## 3. Create the database and load the schema
 
-Open PowerShell and go to the repository root:
+Open **pgAdmin 4**, expand **Servers** in the Browser tree, and enter the PostgreSQL password if prompted. Right-click **Databases** and select **Create** > **Database...**. Set **Database** to `lab_reservation` and **Owner** to `postgres`, then click **Save**.
 
-```powershell
-cd C:\xampp\htdocs\G-19_P2_WebDevLab
-```
+To load the database schema in pgAdmin 4:
 
-Create a database named `lab_reservation`. If PostgreSQL's `bin` directory is in your `PATH`, run:
+1. In the Browser tree, expand **Databases** and right-click `lab_reservation`.
+2. Select **Query Tool**.
+3. In the Query Tool, select **Open File** (or **File** > **Open**) and open:
 
-```powershell
-createdb -U postgres lab_reservation
-```
+   ```text
+   C:\xampp\htdocs\G-19_P2_WebDevLab\database\schema.sql
+   ```
 
-Otherwise, use the installed PostgreSQL version's full executable path. For example, change `16` if your installed PostgreSQL version differs:
+   If you installed the project in a different folder, use that folder's full path to `database\schema.sql`.
+4. Confirm the Query Tool is connected to `lab_reservation`, then click **Execute/Refresh** (the lightning icon) or press **F5**.
 
-```powershell
-& "C:\Program Files\PostgreSQL\16\bin\createdb.exe" -U postgres lab_reservation
-```
+The schema creates the application tables and booking indexes.
 
-Enter the PostgreSQL password if prompted. Then load the schema and sample data:
-
-```powershell
-psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/seed.sql
-```
-
-If `psql` is not in `PATH`, use its full path in the same way, for example:
-
-```powershell
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/schema.sql
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/seed.sql
-```
-
-The schema creates the application tables and booking indexes. The seed adds computers and all 28 half-hour slots, and enables PostgreSQL's `pgcrypto` extension. The database account running the seed must be allowed to create that extension.
-
-For a fresh database, use `schema.sql` and `seed.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration instead:
+For a fresh database, use `schema.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration to that database instead:
 
 ```powershell
 psql -U postgres -d lab_reservation -v ON_ERROR_STOP=1 -f database/migrations/20261027_add_booking_group.sql
