@@ -237,6 +237,69 @@ Restart Apache from the XAMPP Control Panel after saving the Apache configuratio
 
 The PHP files in `public` are served directly by Apache. `public/.htaccess` forwards clean routes such as `/availability` and `/admin/` to `public/index.php`; `mod_rewrite` and `AllowOverride All` are required for those clean routes. Existing PHP files such as `/new-booking.php` are served directly.
 
+## Project file tree
+
+This tree reflects the current local working copy. `config/.env` and `database/seed.sql` are local-only files excluded from Git. The `.env` file contains database credentials and must remain private.
+
+```text
+.
+|-- .gitignore
+|-- README.md
+|-- app
+|   |-- controllers
+|   |   |-- AdminComputerController.php
+|   |   |-- AuthController.php
+|   |   |-- ComputerController.php
+|   |   |-- StudentController.php
+|   |   `-- UserController.php
+|   |-- middleware
+|   |   `-- AdminMiddleware.php
+|   |-- repositories
+|   |   |-- BookingRepository.php
+|   |   |-- ComputerRepository.php
+|   |   `-- UserRepository.php
+|   `-- views
+|       |-- admin
+|       |   |-- bookings.php
+|       |   |-- computers.php
+|       |   |-- dashboard.php
+|       |   `-- users.php
+|       |-- layouts
+|       |   |-- footer.php
+|       |   `-- header.php
+|       |-- student
+|       |   |-- bookings.php
+|       |   |-- confirm-booking.php
+|       |   |-- dashboard.php
+|       |   `-- new-booking.php
+|       |-- availability.php
+|       |-- home.php
+|       `-- login.php
+|-- config
+|   |-- .env (local only; excluded from Git)
+|   |-- app.php
+|   `-- database.php
+|-- database
+|   |-- migrations
+|   |   `-- 20261027_add_booking_group.sql
+|   |-- schema.sql
+|   `-- seed.sql (not present in GitHub repo; included in local repo)
+`-- public
+    |-- assets
+    |   |-- css
+    |   |   `-- style.css
+    |   `-- js
+    |       |-- availability.js
+    |       `-- new-booking.js
+    |-- .htaccess
+    |-- confirm-booking.php
+    |-- dashboard.php
+    |-- index.php
+    |-- login.php
+    |-- my-bookings.php
+    `-- new-booking.php
+```
+
 ## Troubleshooting
 
 ### The browser says the site cannot be reached
