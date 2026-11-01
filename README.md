@@ -71,6 +71,21 @@ To load the database schema in pgAdmin 4:
 
 The schema creates the application tables and booking indexes.
 
+### Generate the time slots
+
+After loading the schema, open **pgAdmin 4** and generate the lab's 28 half-hour time slots:
+
+1. In the Browser tree, expand **Databases**, select `lab_reservation`, and open **Query Tool**.
+2. Paste the query below and click **Execute/Refresh** (the lightning icon) or press **F5**. Run it once; running it again will conflict with the unique time-slot constraints.
+
+```sql
+INSERT INTO time_slots (start_time, end_time)
+SELECT
+    time '08:00' + (n * interval '30 minutes'),
+    time '08:00' + ((n + 1) * interval '30 minutes')
+FROM generate_series(0, 27) AS series(n);
+```
+
 For a fresh database, use `schema.sql` as shown. Do not apply the upgrade migration to a fresh database. If you already have an older copy of this database and its `bookings` table lacks the booking-group fields, apply the migration to that database instead:
 
 ```powershell
