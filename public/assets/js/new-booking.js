@@ -226,11 +226,6 @@
         $continue.prop('disabled', false);
     });
 
-    $form.on('submit', function (event) {
-        event.preventDefault();
-        fetchAvailability(false);
-    });
-
     $form.on('change', 'input[name="slots[]"], #booking-date', function () {
         $slotInputs.each(function () {
             $(this).closest('label').toggleClass('is-selected', this.checked);
