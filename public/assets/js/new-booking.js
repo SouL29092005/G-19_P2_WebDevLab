@@ -19,12 +19,14 @@
     const $summary = $('#availability-summary');
     const $message = $('#availability-message');
     const $computerList = $('#available-computers');
+    const $results = $('.availability-results');
     const $holdDate = $('#hold-date');
     const $holdSlots = $('#hold-slot-ids');
     const $continue = $('#continue-booking');
 
     let activeRequest = null;
     let pollTimer = null;
+    let requestVersion = 0;
 
     // Keep slot IDs as strings because they are form values and are sent directly as GET/POST parameters.
     function selectedSlots() {
@@ -58,6 +60,13 @@
         ).prop('hidden', false);
     }
 
+    function notifyComputerSelectionChanged() {
+        const holdForm = document.getElementById('hold-form');
+        if (holdForm) {
+            holdForm.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
     // Rebuild computer choices only when the available ID set changes, preserving a still-valid radio selection.
     function renderComputers(data, slotIds) {
         const computers = data.computers || [];
@@ -87,6 +96,7 @@
                 'Change your date or remove a slot to see other computers.'
             );
             $continue.prop('disabled', true);
+            notifyComputerSelectionChanged();
             return;
         }
 
@@ -133,6 +143,7 @@
         });
 
         $continue.prop('disabled', !selectionStillValid);
+        notifyComputerSelectionChanged();
     }
 
     // Fetch availability for the current date/slot set; aborting the previous request prevents stale UI updates.
@@ -144,6 +155,7 @@
         updatePastSlots();
         const slotIds = selectedSlots();
         const date = $date.val();
+        const thisRequestVersion = ++requestVersion;
 
         if (!isPolling) {
             $count.text(String(slotIds.length));
@@ -159,6 +171,11 @@
                     value: slotId
                 }));
             });
+        }
+
+        if (activeRequest !== null) {
+            activeRequest.abort();
+            activeRequest = null;
         }
 
         if (slotIds.length === 0) {
@@ -179,11 +196,7 @@
             $message.prop('hidden', true);
         }
 
-        if (activeRequest !== null) {
-            activeRequest.abort();
-        }
-
-        activeRequest = $.ajax({
+        const request = $.ajax({
             url: endpoint,
             method: 'GET',
             dataType: 'json',
@@ -192,10 +205,17 @@
                 date: date,
                 slots: slotIds
             }
-        }).done(function (data) {
+        });
+        activeRequest = request;
+        $results.addClass('is-refreshing').attr('aria-busy', 'true');
+
+        request.done(function (data) {
+            if (thisRequestVersion !== requestVersion) {
+                return;
+            }
             renderComputers(data, slotIds);
         }).fail(function (xhr, status) {
-            if (status === 'abort') {
+            if (status === 'abort' || thisRequestVersion !== requestVersion) {
                 return;
             }
             if (!isPolling) {
@@ -206,7 +226,10 @@
                 setEmptyMessage('Availability unavailable', message);
             }
         }).always(function () {
-            activeRequest = null;
+            if (activeRequest === request) {
+                activeRequest = null;
+                $results.removeClass('is-refreshing').removeAttr('aria-busy');
+            }
         });
     }
 

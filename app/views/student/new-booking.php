@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-// Build lookup data once so selected slots, past-slot styling, and labels use the same controller result.
 $escape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $baseUrl = rtrim(APP_BASE_URL, '/');
 $availableComputers = is_array($availableComputers ?? null) ? $availableComputers : [];
@@ -20,132 +19,146 @@ foreach ($timeSlots as $slot) {
 }
 
 ?>
-<!-- The GET form drives discovery; the separate POST form submits the selected date, slots, and computer for a hold. -->
 <section class="student-page">
     <div class="student-page-heading">
         <div>
             <p class="eyebrow">STUDENT PORTAL</p>
-            <h2>New Booking</h2>
-            <p>Select one computer that is free for every selected slot.</p>
+            <h2>Make a reservation.</h2>
+            <p>Pick your time, find a free computer, and confirm in a couple of steps.</p>
         </div>
-        <a class="button button-secondary" href="<?= $escape($baseUrl . '/my-bookings.php') ?>">My Bookings</a>
+        <a class="button button-secondary" href="<?= $escape($baseUrl . '/my-bookings.php') ?>"><i class="fa-regular fa-calendar" aria-hidden="true"></i> My bookings</a>
     </div>
 
     <?php if (!empty($error)): ?>
-        <div class="alert alert-error" role="alert"><?= $escape($error) ?></div>
+        <div class="alert alert-error" role="alert" data-toast="error"><?= $escape($error) ?></div>
     <?php endif; ?>
 
     <?php if (!empty($success)): ?>
-        <div class="alert alert-success" role="status"><?= $escape($success) ?></div>
+        <div class="alert alert-success" role="status" data-toast="success"><?= $escape($success) ?></div>
     <?php endif; ?>
 
-    <section class="student-panel booking-form-panel">
-        <!-- Data attributes initialize client-side past-slot checks; the controller repeats all checks on submission. -->
-        <form method="get" action="<?= $escape($baseUrl . '/new-booking.php') ?>" class="booking-date-form multi-slot-form" id="availability-form" data-endpoint="<?= $escape($baseUrl . '/new-booking.php') ?>" data-today-date="<?= $escape($bookingToday) ?>" data-current-time="<?= $escape($bookingNow) ?>">
-            <div class="form-group">
-                <label for="booking-date">Booking date</label>
-                <input type="date" id="booking-date" name="date" value="<?= $escape($selectedDate) ?>" min="<?= $escape($minDate) ?>" max="<?= $escape($maxDate) ?>" required>
-            </div>
-
-            <fieldset class="time-slot-picker">
-                <legend style="font-weight:600;margin-bottom:6px;">Choose time slots</legend>
-                <p class="field-hint" style="margin-bottom:8px;">Select one or more 30-minute slots. Lab hours are 8:00 AM–10:00 PM.</p>
-
-                <details class="time-slot-dropdown" id="booking-slot-dropdown">
-                    <summary class="time-slot-dropdown-summary">
-                        <span id="booking-slot-summary"><?= count($selectedSlotIds) === 0 ? 'Choose time slots' : count($selectedSlotIds) . ' time slot' . (count($selectedSlotIds) === 1 ? '' : 's') . ' selected' ?></span>
-                        <span aria-hidden="true">&or;</span>
-                    </summary>
-                    <div class="time-slot-menu time-slot-options">
-                    <?php foreach ($timeSlots as $slot): ?>
-                        <?php
-                        $slotId = (int) $slot['slot_id'];
-                        $start = substr((string) $slot['start_time'], 0, 5);
-                        $end = substr((string) $slot['end_time'], 0, 5);
-                        $past = $selectedDate === $bookingToday && (string) $slot['start_time'] <= $bookingNow;
-                        ?>
-                        <label class="time-slot-option<?= isset($selectedLookup[$slotId]) ? ' is-selected' : '' ?><?= $past ? ' is-past' : '' ?>">
-                            <input type="checkbox" name="slots[]" value="<?= $slotId ?>" data-start-time="<?= $escape((string) $slot['start_time']) ?>" <?= isset($selectedLookup[$slotId]) ? 'checked' : '' ?> <?= $past ? 'disabled' : '' ?>>
-                            <span><?= $escape($start) ?>–<?= $escape($end) ?></span>
-                        </label>
-                    <?php endforeach; ?>
-                    </div>
-                </details>
-            </fieldset>
-
-            <div class="booking-selection-summary" aria-live="polite">
-                <strong id="selected-slot-count"><?= count($selectedSlotIds) ?></strong>
-                <span>time slots selected</span>
-            </div>
-
-            <button type="submit" class="button button-secondary">Find computers</button>
-        </form>
-
-        <div class="booking-rules">
-            <strong>Booking window:</strong> today through the next 3 days. Your selected slots are held together for 2 minutes after you continue.
+    <section class="student-panel booking-form-panel" data-reveal>
+        <div class="booking-stepper" data-booking-stepper aria-label="Booking steps">
+            <div class="booking-step is-current" data-step="1" aria-current="step"><span>1</span> Date &amp; time</div>
+            <div class="booking-step" data-step="2"><span>2</span> Choose computer</div>
+            <div class="booking-step" data-step="3"><span>3</span> Confirm</div>
         </div>
 
-        <section class="availability-results" aria-live="polite">
-            <div class="student-panel-heading">
-                <div>
-                    <h3>Computers available for all selected slots</h3>
-                    <p id="availability-summary" class="muted-text">
-                        <?php if ($selectedSlotIds === []): ?>
-                            Select one or more slots to see matching computers.
-                        <?php else: ?>
-                            <?= count($availableComputers) ?> computer<?= count($availableComputers) === 1 ? '' : 's' ?> available across <?= count($selectedSlotIds) ?> selected slot<?= count($selectedSlotIds) === 1 ? '' : 's' ?>.
-                        <?php endif; ?>
-                    </p>
+        <div class="booking-layout">
+            <div class="booking-primary">
+                <!-- The server remains authoritative for all submitted dates, slots, and computer IDs. -->
+                <form method="get" action="<?= $escape($baseUrl . '/new-booking.php') ?>" class="booking-date-form multi-slot-form" id="availability-form" data-endpoint="<?= $escape($baseUrl . '/new-booking.php') ?>" data-today-date="<?= $escape($bookingToday) ?>" data-current-time="<?= $escape($bookingNow) ?>" data-validate>
+                    <div class="form-group">
+                        <label for="booking-date">Booking date</label>
+                        <input type="date" id="booking-date" name="date" value="<?= $escape($selectedDate) ?>" min="<?= $escape($minDate) ?>" max="<?= $escape($maxDate) ?>" required>
+                    </div>
+
+                    <fieldset class="time-slot-picker">
+                        <legend>Choose one or more time slots</legend>
+                        <p class="field-hint">30-minute sessions · Lab hours 8:00 AM–10:00 PM.</p>
+                        <details class="time-slot-dropdown" id="booking-slot-dropdown" <?= $selectedSlotIds !== [] ? 'open' : '' ?>>
+                            <summary class="time-slot-dropdown-summary">
+                                <span id="booking-slot-summary"><?= count($selectedSlotIds) === 0 ? 'Choose time slots' : count($selectedSlotIds) . ' time slot' . (count($selectedSlotIds) === 1 ? '' : 's') . ' selected' ?></span>
+                                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                            </summary>
+                            <div class="time-slot-menu time-slot-options">
+                            <?php foreach ($timeSlots as $slot): ?>
+                                <?php
+                                $slotId = (int) $slot['slot_id'];
+                                $start = substr((string) $slot['start_time'], 0, 5);
+                                $end = substr((string) $slot['end_time'], 0, 5);
+                                $past = $selectedDate === $bookingToday && (string) $slot['start_time'] <= $bookingNow;
+                                ?>
+                                <label class="time-slot-option<?= isset($selectedLookup[$slotId]) ? ' is-selected' : '' ?><?= $past ? ' is-past' : '' ?>">
+                                    <input type="checkbox" name="slots[]" value="<?= $slotId ?>" data-start-time="<?= $escape((string) $slot['start_time']) ?>" <?= isset($selectedLookup[$slotId]) ? 'checked' : '' ?> <?= $past ? 'disabled' : '' ?>>
+                                    <span><?= $escape($start) ?>–<?= $escape($end) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            </div>
+                        </details>
+                    </fieldset>
+
+                    <div class="booking-selection-summary" aria-live="polite">
+                        <strong id="selected-slot-count"><?= count($selectedSlotIds) ?></strong>
+                        <span id="booking-slot-summary-copy">time slots selected</span>
+                    </div>
+
+                    <button type="submit" class="button button-secondary"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find computers</button>
+                </form>
+
+                <div class="booking-rules">
+                    <strong><i class="fa-regular fa-clock" aria-hidden="true"></i> Quick hold:</strong>
+                    Your selected slots are held together for 2 minutes after you continue.
                 </div>
-            </div>
 
-            <div id="availability-message" class="student-empty booking-prompt" <?= $selectedSlotIds !== [] && $availableComputers !== [] ? 'hidden' : '' ?>>
-                <?php if ($selectedSlotIds === []): ?>
-                    <h4>Select your time slots</h4>
-                    <p>Available computers will appear here as you update your selection.</p>
-                <?php elseif ($availableComputers === []): ?>
-                    <h4>No computer is free for every selected slot</h4>
-                    <p>Change your date or remove a slot to see other computers.</p>
-                <?php endif; ?>
-            </div>
-
-            <!-- Selected radio and hidden slot inputs are the payload consumed by StudentController::newBooking(). -->
-            <form method="post" action="<?= $escape($baseUrl . '/new-booking.php') ?>" id="hold-form" class="new-booking-form">
-                <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
-                <input type="hidden" name="action" value="hold">
-                <input type="hidden" name="booking_date" id="hold-date" value="<?= $escape($selectedDate) ?>">
-                <div id="hold-slot-ids">
-                    <?php foreach ($selectedSlotIds as $slotId): ?>
-                        <input type="hidden" name="slot_ids[]" value="<?= (int) $slotId ?>">
-                    <?php endforeach; ?>
-                </div>
-
-                <div id="available-computers" class="available-computer-grid">
-                    <?php foreach ($availableComputers as $computer): ?>
-                        <label class="available-computer-option">
-                            <input type="radio" name="computer_id" value="<?= (int) $computer['computer_id'] ?>" required>
-                            <span>
-                                <strong><?= $escape($computer['computer_name']) ?></strong>
-                                <?php if (!empty($computer['description'])): ?>
-                                    <small><?= $escape($computer['description']) ?></small>
+                <section class="availability-results" aria-live="polite">
+                    <div class="student-panel-heading">
+                        <div>
+                            <h3>Computers available for every slot</h3>
+                            <p id="availability-summary" class="muted-text">
+                                <?php if ($selectedSlotIds === []): ?>
+                                    Select one or more slots to see matching computers.
+                                <?php else: ?>
+                                    <?= count($availableComputers) ?> computer<?= count($availableComputers) === 1 ? '' : 's' ?> available across <?= count($selectedSlotIds) ?> selected slot<?= count($selectedSlotIds) === 1 ? '' : 's' ?>.
                                 <?php endif; ?>
-                                <small>Available for: <?= $escape(implode(', ', $selectedLabels)) ?></small>
-                            </span>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
+                            </p>
+                        </div>
+                    </div>
 
-                <div style="margin-top:16px;">
-                    <button type="submit" id="continue-booking" class="button button-primary" <?= $availableComputers === [] ? 'disabled' : '' ?>>Continue to Confirmation</button>
-                </div>
-            </form>
-        </section>
+                    <div id="availability-message" class="student-empty booking-prompt" <?= $selectedSlotIds !== [] && $availableComputers !== [] ? 'hidden' : '' ?>>
+                        <?php if ($selectedSlotIds === []): ?>
+                            <h4>Select your time slots</h4>
+                            <p>Available computers will appear here as you update your selection.</p>
+                        <?php elseif ($availableComputers === []): ?>
+                            <h4>No computer is free for every selected slot</h4>
+                            <p>Change your date or remove a slot to see other computers.</p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Keep these exact POST names: StudentController consumes the hold payload on submit. -->
+                    <form method="post" action="<?= $escape($baseUrl . '/new-booking.php') ?>" id="hold-form" class="new-booking-form" data-validate>
+                        <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+                        <input type="hidden" name="action" value="hold">
+                        <input type="hidden" name="booking_date" id="hold-date" value="<?= $escape($selectedDate) ?>">
+                        <div id="hold-slot-ids">
+                            <?php foreach ($selectedSlotIds as $slotId): ?>
+                                <input type="hidden" name="slot_ids[]" value="<?= (int) $slotId ?>">
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div id="available-computers" class="available-computer-grid">
+                            <?php foreach ($availableComputers as $computer): ?>
+                                <label class="available-computer-option">
+                                    <input type="radio" name="computer_id" value="<?= (int) $computer['computer_id'] ?>" required>
+                                    <span>
+                                        <strong><?= $escape($computer['computer_name']) ?></strong>
+                                        <?php if (!empty($computer['description'])): ?>
+                                            <small><?= $escape($computer['description']) ?></small>
+                                        <?php endif; ?>
+                                        <small>Available for: <?= $escape(implode(', ', $selectedLabels)) ?></small>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div class="hold-actions">
+                            <button type="submit" id="continue-booking" class="button button-primary" <?= $availableComputers === [] ? 'disabled' : '' ?>>Continue to confirmation <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <aside class="booking-summary-card" aria-label="Reservation summary">
+                <h3><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Your selection</h3>
+                <div class="summary-line"><span>Date</span><strong id="summary-date"><?= $escape(date('D, d M Y', strtotime($selectedDate))) ?></strong></div>
+                <div class="summary-line"><span>Time slots</span><strong id="summary-slots"><?= $selectedLabels === [] ? 'Not selected' : $escape(implode(', ', $selectedLabels)) ?></strong></div>
+                <div class="summary-line"><span>Computer</span><strong id="summary-computer">Choose a computer</strong></div>
+                <p class="field-hint">Your reservation is only confirmed after the final step.</p>
+            </aside>
+        </div>
     </section>
 
-    <p class="student-back-link">
-        <a href="<?= $escape($baseUrl . '/dashboard.php') ?>">&larr; Back to dashboard</a>
-    </p>
+    <p class="student-back-link"><a href="<?= $escape($baseUrl . '/dashboard.php') ?>"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to dashboard</a></p>
 </section>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="<?= $escape($baseUrl . '/assets/js/new-booking.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/new-booking.js')) ?>"></script>
+<script defer src="<?= $escape($baseUrl . '/assets/js/new-booking.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/new-booking.js')) ?>"></script>
