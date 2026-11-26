@@ -1,13 +1,11 @@
 (function ($) {
     'use strict';
 
-    // Progressive enhancement for the public availability page; server-rendered results remain the initial fallback.
     if (!$) {
         return;
     }
 
     const $form = $('#availability-filter-form');
-
     if (!$form.length) {
         return;
     }
@@ -15,40 +13,43 @@
     const endpoint = $form.data('endpoint');
     const $results = $('#availability-results');
     const $updated = $('#availability-updated');
+    const $search = $('#availability-search');
     let availabilityRequest = null;
     let requestVersion = 0;
     let changeTimer = null;
 
-    // Group the server's computer/slot rows into the card structure expected by the availability view.
     function renderAvailability(rows) {
         if (!Array.isArray(rows) || rows.length === 0) {
             $results.empty().append(
-                $('<p>').addClass('empty-state').text(
-                    'No computers match the selected filters.'
-                )
+                $('<p>').addClass('empty-state').text('No computers match the selected filters.')
             );
             return;
         }
 
         const $computerList = $('<div>').addClass('computer-list');
         let currentComputerId = null;
-        let $slotList = null;
+        let $tileGrid = null;
 
         rows.forEach(function (row) {
             const computerId = String(row.computer_id);
-
             if (computerId !== currentComputerId) {
-                const $card = $('<section>').addClass('computer-card');
-                $card.append($('<h3>').text(row.computer_name));
-
+                const $card = $('<section>')
+                    .addClass('computer-card')
+                    .attr('data-computer-name', row.computer_name || '');
+                const $header = $('<div>').addClass('computer-card-header');
+                $header.append(
+                    $('<span>').addClass('computer-icon').attr('aria-hidden', 'true').append(
+                        $('<i>').addClass('fa-solid fa-desktop')
+                    ),
+                    $('<div>').append($('<h3>').text(row.computer_name || 'Computer'))
+                );
                 if (row.description) {
-                    $card.append(
+                    $header.find('div').append(
                         $('<p>').addClass('computer-description').text(row.description)
                     );
                 }
-
-                $slotList = $('<div>').addClass('slot-list');
-                $card.append($slotList);
+                $tileGrid = $('<div>').addClass('pc-tile-grid');
+                $card.append($header, $tileGrid);
                 $computerList.append($card);
                 currentComputerId = computerId;
             }
@@ -58,28 +59,50 @@
                 : 'available';
             const startTime = String(row.start_time).slice(0, 5);
             const endTime = String(row.end_time).slice(0, 5);
-            const $slotItem = $('<div>').addClass('slot-item');
-            const $slotStatus = $('<span>')
-                .addClass('slot-status')
-                .addClass('status-' + status)
-                .text(status.charAt(0).toUpperCase() + status.slice(1));
+            const stateLabel = status.charAt(0).toUpperCase() + status.slice(1);
+            const tooltip = status === 'booked'
+                ? 'Booked until ' + endTime
+                : (status === 'waiting' ? 'Temporary hold for this slot, through ' + endTime : 'Available for this slot');
+            const ariaLabel = String(row.computer_name || 'Computer') + ', ' + startTime + ' to ' + endTime + ', ' + status;
+            const $tile = $('<div>')
+                .addClass('pc-tile status-' + status)
+                .attr('title', tooltip)
+                .attr('aria-label', ariaLabel);
 
-            $slotItem.append(
-                $('<span>').addClass('slot-time').text(startTime + ' – ' + endTime),
-                $slotStatus
+            $tile.append(
+                $('<span>').addClass('slot-time').text(startTime + '–' + endTime),
+                $('<span>').addClass('slot-status status-' + status).text(stateLabel)
             );
-            $slotList.append($slotItem);
+            $tileGrid.append($tile);
         });
 
         $results.empty().append($computerList);
+        applySearch();
     }
 
-    // Refresh the current filters and ignore older responses so slower requests cannot overwrite newer selections.
+    function applySearch() {
+        const query = String($search.val() || '').trim().toLocaleLowerCase();
+        const $cards = $results.find('.computer-card');
+        let visible = 0;
+        $cards.each(function () {
+            const matches = !query || $(this).text().toLocaleLowerCase().includes(query);
+            $(this).toggle(matches);
+            if (matches) {
+                visible += 1;
+            }
+        });
+        $results.find('.availability-search-empty').remove();
+        if ($cards.length && visible === 0) {
+            $results.append(
+                $('<p>').addClass('empty-state availability-search-empty').text('No computer matches your search.')
+            );
+        }
+    }
+
     function refreshAvailability() {
         if (document.hidden) {
             return;
         }
-
         if (availabilityRequest !== null) {
             availabilityRequest.abort();
         }
@@ -91,28 +114,22 @@
             dataType: 'json',
             data: $form.serialize() + '&ajax=availability'
         });
-
         availabilityRequest = request;
+        $results.addClass('is-refreshing').attr('aria-busy', 'true');
 
         request.done(function (response) {
             if (thisRequestVersion !== requestVersion) {
                 return;
             }
-
             if (!response || response.success !== true) {
-                $updated.text(
-                    response && response.error
-                        ? response.error
-                        : 'Availability could not be refreshed.'
-                );
+                $updated.text(response && response.error
+                    ? response.error
+                    : 'Availability could not be refreshed.');
                 return;
             }
-
             renderAvailability(response.availability);
             $updated.text(
-                'Availability updated at '
-                + new Date(response.updated_at).toLocaleTimeString()
-                + '.'
+                'Live · updated at ' + new Date(response.updated_at).toLocaleTimeString()
             );
         });
 
@@ -120,7 +137,6 @@
             if (status === 'abort' || thisRequestVersion !== requestVersion) {
                 return;
             }
-
             const message = xhr.responseJSON && xhr.responseJSON.error
                 ? xhr.responseJSON.error
                 : 'Unable to refresh availability. Showing the most recent results.';
@@ -128,6 +144,7 @@
         });
 
         request.always(function () {
+            $results.removeClass('is-refreshing').removeAttr('aria-busy');
             if (availabilityRequest === request) {
                 availabilityRequest = null;
             }
@@ -140,10 +157,11 @@
     });
 
     $form.on('change', 'input, select', function () {
-        // Debounce rapid filter changes to avoid issuing one request for every checkbox interaction.
         window.clearTimeout(changeTimer);
         changeTimer = window.setTimeout(refreshAvailability, 200);
     });
+
+    $search.on('input', applySearch);
 
     document.addEventListener('visibilitychange', function () {
         if (!document.hidden) {
@@ -152,6 +170,5 @@
     });
 
     refreshAvailability();
-    // Keep the public view current while open; hidden tabs are skipped by refreshAvailability().
     window.setInterval(refreshAvailability, 5000);
 })(window.jQuery);

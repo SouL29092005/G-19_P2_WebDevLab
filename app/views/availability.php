@@ -2,29 +2,35 @@
 
 declare(strict_types=1);
 
-// Filter values and initial result rows are supplied by ComputerController for both the page and polling endpoint.
 $baseUrl = rtrim(APP_BASE_URL, '/');
 
 ?>
-<!-- This public view shows availability without account data; JavaScript refreshes the same validated filters. -->
 <section class="availability-page">
     <div class="availability-heading">
-        <h2>Computer Availability</h2>
-        <p>Filter laboratory computers by reservation date, time slot, and availability status.</p>
+        <div>
+            <p class="eyebrow">LIVE LAB MAP</p>
+            <h2>Find your next open seat.</h2>
+            <p>Explore computer availability by date, time, and reservation status.</p>
+        </div>
+        <div class="availability-legend" aria-label="Availability legend">
+            <span class="legend-item"><i class="legend-dot" aria-hidden="true"></i> Available</span>
+            <span class="legend-item"><i class="legend-dot waiting" aria-hidden="true"></i> Temporary hold</span>
+            <span class="legend-item"><i class="legend-dot booked" aria-hidden="true"></i> Booked</span>
+        </div>
     </div>
 
     <?php if ($errorMessage !== null): ?>
-        <p class="form-error" role="alert"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="form-error" role="alert" data-toast="error"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></p>
     <?php endif; ?>
 
-    <form method="GET" action="<?= htmlspecialchars($baseUrl . '/availability', ENT_QUOTES, 'UTF-8') ?>" class="date-filter" id="availability-filter-form" data-endpoint="<?= htmlspecialchars($baseUrl . '/availability', ENT_QUOTES, 'UTF-8') ?>">
+    <form method="GET" action="<?= htmlspecialchars($baseUrl . '/availability', ENT_QUOTES, 'UTF-8') ?>" class="date-filter" id="availability-filter-form" data-endpoint="<?= htmlspecialchars($baseUrl . '/availability', ENT_QUOTES, 'UTF-8') ?>" data-validate>
         <div class="filter-field">
             <label for="booking-date">Reservation date</label>
             <input type="date" id="booking-date" name="date" value="<?= htmlspecialchars($selectedDate, ENT_QUOTES, 'UTF-8') ?>" min="<?= htmlspecialchars($minDate, ENT_QUOTES, 'UTF-8') ?>" max="<?= htmlspecialchars($maxDate, ENT_QUOTES, 'UTF-8') ?>" required>
         </div>
 
         <div class="filter-field">
-            <label for="availability-status">Status</label>
+            <label for="availability-status">Availability status</label>
             <select id="availability-status" name="status">
                 <?php foreach ($statusOptions as $statusOption): ?>
                     <option value="<?= htmlspecialchars($statusOption, ENT_QUOTES, 'UTF-8') ?>" <?= $selectedStatus === $statusOption ? 'selected' : '' ?>>
@@ -35,9 +41,9 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
         </div>
 
         <details class="filter-slots">
-            <summary>Time slots <span>(select multiple)</span></summary>
+            <summary>Time slots <span>(select any)</span></summary>
             <div class="time-slot-menu">
-                <p class="filter-hint">Select one or more slots. Leave all unchecked to include every time slot.</p>
+                <p class="filter-hint">Leave all unchecked to include every slot.</p>
                 <div class="time-slot-options">
                     <?php foreach ($timeSlots as $timeSlot): ?>
                         <?php
@@ -55,14 +61,24 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
         </details>
 
         <div class="filter-actions">
-            <button type="submit" class="button button-primary">Apply Filters</button>
+            <button type="submit" class="button button-primary"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Apply filters</button>
         </div>
     </form>
 
-    <p id="availability-updated" class="availability-updated" role="status">Availability refreshes automatically every 5 seconds.</p>
+    <div class="availability-results-heading">
+        <div>
+            <h3>Computer map</h3>
+            <p id="availability-updated" class="availability-updated" role="status">Live availability refreshes every 5 seconds.</p>
+        </div>
+        <label class="table-search-wrap availability-search-wrap">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span class="sr-only">Search computers</span>
+            <input class="table-search" type="search" id="availability-search" placeholder="Search computers">
+        </label>
+    </div>
 
-    <!-- Server-render the first result set so the page remains useful before JavaScript finishes loading. -->
-    <div id="availability-results">
+    <!-- Server-render the first result set so availability remains useful without JavaScript. -->
+    <div id="availability-results" aria-live="polite">
         <?php if ($availability === []): ?>
             <p class="empty-state">No computers match the selected filters.</p>
         <?php else: ?>
@@ -74,24 +90,30 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
                             </div></section>
                         <?php endif; ?>
                         <?php $currentComputerId = $slot['computer_id']; ?>
-                        <section class="computer-card">
-                            <h3><?= htmlspecialchars($slot['computer_name'], ENT_QUOTES, 'UTF-8') ?></h3>
-                            <?php if (!empty($slot['description'])): ?>
-                                <p class="computer-description"><?= htmlspecialchars($slot['description'], ENT_QUOTES, 'UTF-8') ?></p>
-                            <?php endif; ?>
-                            <div class="slot-list">
+                        <section class="computer-card" data-computer-name="<?= htmlspecialchars($slot['computer_name'], ENT_QUOTES, 'UTF-8') ?>">
+                            <div class="computer-card-header">
+                                <span class="computer-icon" aria-hidden="true"><i class="fa-solid fa-desktop"></i></span>
+                                <div>
+                                    <h3><?= htmlspecialchars($slot['computer_name'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                    <?php if (!empty($slot['description'])): ?>
+                                        <p class="computer-description"><?= htmlspecialchars($slot['description'], ENT_QUOTES, 'UTF-8') ?></p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="pc-tile-grid">
                     <?php endif; ?>
 
                     <?php
                     $startTime = substr($slot['start_time'], 0, 5);
                     $endTime = substr($slot['end_time'], 0, 5);
                     $status = $slot['status'];
+                    $busyTitle = $status === 'booked'
+                        ? 'Booked until ' . $endTime
+                        : ($status === 'waiting' ? 'Temporary hold for this slot, through ' . $endTime : 'Available for this slot');
                     ?>
-                    <div class="slot-item">
-                        <span class="slot-time"><?= htmlspecialchars($startTime . ' – ' . $endTime, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="slot-status status-<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>">
-                            <?= htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') ?>
-                        </span>
+                    <div class="pc-tile status-<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($busyTitle, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars($slot['computer_name'] . ', ' . $startTime . ' to ' . $endTime . ', ' . $status . ($status === 'booked' ? ', booked until ' . $endTime : ''), ENT_QUOTES, 'UTF-8') ?>">
+                        <span class="slot-time"><?= htmlspecialchars($startTime . '–' . $endTime, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="slot-status status-<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 <?php endforeach; ?>
                 </div></section>
@@ -100,5 +122,4 @@ $baseUrl = rtrim(APP_BASE_URL, '/');
     </div>
 </section>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="<?= htmlspecialchars($baseUrl . '/assets/js/availability.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/availability.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
+<script defer src="<?= htmlspecialchars($baseUrl . '/assets/js/availability.js?v=' . filemtime(PUBLIC_PATH . '/assets/js/availability.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
