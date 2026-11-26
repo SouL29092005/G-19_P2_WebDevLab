@@ -12,6 +12,25 @@ The configured local URL is **http://lab-reservation.local:8080/**. Apache must 
 - PostgreSQL 14 or newer, installed separately from XAMPP. PostgreSQL's installer can also install pgAdmin.
 - The XAMPP PHP `pdo_pgsql` and `pgsql` extensions enabled.
 
+## Frontend runtime
+
+The interface is rendered by the existing PHP templates and static files under
+`public/assets`. There is no Node.js, npm, or frontend build step. Apache serves
+the application directly from `public`.
+
+The enhanced interface loads DM Sans and Manrope, Font Awesome, jQuery,
+Flatpickr, SweetAlert2, and the admin dashboard's Chart.js chart from their
+CDNs. If a CDN is unreachable, core PHP pages and native form controls remain
+available; icons, custom fonts, date-picker enhancements, dialogs, and charts
+may fall back or be unavailable. The admin charts currently display clearly
+labelled sample data because the existing admin dashboard route does not
+provide chart metrics.
+
+> **Database note:** The checked-in application is PostgreSQL-backed. XAMPP's
+> bundled MySQL/MariaDB is not compatible with its current schema and SQL. Keep
+> the PostgreSQL setup below unless the backend is intentionally migrated in a
+> separate project change.
+
 ## 1. Download the project
 
 Install XAMPP using its default directory, `C:\xampp`. If you choose a different directory, use that actual directory in the Apache configuration later.
